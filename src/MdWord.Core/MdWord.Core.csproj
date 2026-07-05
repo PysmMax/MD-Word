@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net48</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.*" PrivateAssets="all" />
+    <PackageReference Include="Markdig" Version="1.3.2" />
+    <PackageReference Include="DocumentFormat.OpenXml" Version="3.5.1" />
+    <PackageReference Include="Jint" Version="4.10.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\katex.min.js" />
+    <!-- Vendored xsltml 2.1.2 (MathML->LaTeX), unmodified, MIT-style license
+         (see Resources\mmltex\README-xsltml.txt / docs\IDS.md). mdword-entry.xsl
+         is our own file (see its header comment), not part of the vendored set. -->
+    <EmbeddedResource Include="Resources\mmltex\*.xsl" />
+    <EmbeddedResource Include="Resources\mmltex\README-xsltml.txt" />
+  </ItemGroup>
+
+</Project>

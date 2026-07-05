@@ -1,0 +1,12 @@
+<customUI xmlns="http://schemas.microsoft.com/office/2009/07/customui">
+  <ribbon><tabs>
+    <tab idMso="TabHome">
+      <group id="grpMdWord" label="Markdown" insertAfterMso="GroupClipboard">
+        <button id="btnPasteMd" label="Вставити Markdown" size="large" imageMso="Paste"
+                onAction="OnPasteMarkdown" screentip="Вставити Markdown з буфера як форматований текст"/>
+        <button id="btnCopyMd" label="Копіювати Markdown" size="large" imageMso="Copy"
+                onAction="OnCopyMarkdown" screentip="Скопіювати виділене як Markdown"/>
+      </group>
+    </tab>
+  </tabs></ribbon>
+</customUI>
