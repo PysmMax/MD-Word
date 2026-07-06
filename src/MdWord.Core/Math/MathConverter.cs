@@ -10,7 +10,7 @@ namespace MdWord.Core.Math;
 /// MML2OMML.XSL over the extracted <c>&lt;math&gt;</c> element. Never throws —
 /// <see cref="TryConvert"/> reports failure so callers can degrade a single
 /// formula to literal text without aborting the whole document (see
-/// PLAN.md §6 / <see cref="ConvertException"/>'s per-element-failure contract).
+/// the initial plan §6 / <see cref="ConvertException"/>'s per-element-failure contract).
 /// </summary>
 internal static class MathConverter
 {
@@ -35,7 +35,7 @@ internal static class MathConverter
 
             if (mathElement == null)
             {
-                failureReason = "KaTeX не повернув елемент <math> з очікуваним простором імен.";
+                failureReason = "KaTeX did not return a <math> element with the expected namespace.";
                 return false;
             }
 

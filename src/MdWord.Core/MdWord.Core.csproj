@@ -18,7 +18,7 @@
   <ItemGroup>
     <EmbeddedResource Include="Resources\katex.min.js" />
     <!-- Vendored xsltml 2.1.2 (MathML->LaTeX), unmodified, MIT-style license
-         (see Resources\mmltex\README-xsltml.txt / docs\IDS.md). mdword-entry.xsl
+         (see Resources\mmltex\README-xsltml.txt / THIRD-PARTY-NOTICES.md). mdword-entry.xsl
          is our own file (see its header comment), not part of the vendored set. -->
     <EmbeddedResource Include="Resources\mmltex\*.xsl" />
     <EmbeddedResource Include="Resources\mmltex\README-xsltml.txt" />

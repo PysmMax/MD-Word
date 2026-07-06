@@ -1,97 +1,98 @@
 # MD-Word
 
-Надбавка (add-in) для Microsoft Word, яка додає на вкладку «Основне» групу
-**Markdown** з двома кнопками: **Вставити Markdown** (перетворює буфер обміну/Markdown-текст на
-нативний, повністю редагований вміст Word — заголовки, списки, таблиці,
-жирний/курсив, код, посилання, формули LaTeX як рівняння Word) і
-**Копіювати Markdown** (зворотне перетворення виділеного фрагмента Word
-назад у Markdown).
+An add-in for Microsoft Word that adds a **Markdown** group to the Home tab
+with two buttons: **Insert Markdown** (converts the clipboard's Markdown
+text into native, fully editable Word content — headings, lists, tables,
+bold/italic, code, links, LaTeX formulas as Word equations) and
+**Copy as Markdown** (the reverse conversion — turns the selected Word
+fragment back into Markdown).
 
-## Встановлення
+## Installation
 
-1. Завантажте `MD-Word-Setup-<версія>.exe` зі сторінки
-   [Releases](https://github.com/PysmMax/MD-Word/releases/latest).
-2. Запустіть його подвійним кліком — **права адміністратора не потрібні**,
-   встановлення відбувається лише для поточного користувача Windows.
-3. Пройдіть майстер встановлення до кінця.
-4. Запустіть (або перезапустіть) Word — на вкладці «Основне» з'явиться
-   група **Markdown** із кнопками «Вставити Markdown» та «Копіювати
-   Markdown».
+1. Download `MD-Word-Setup-<version>.exe` from the
+   [Releases](https://github.com/PysmMax/MD-Word/releases/latest) page.
+2. Double-click to run it — **administrator rights are not required**,
+   the install is per-user only.
+3. Go through the installer wizard to the end.
+4. Start (or restart) Word — the **Markdown** group with the "Insert
+   Markdown" and "Copy as Markdown" buttons will appear on the Home tab.
 
-Якщо під час встановлення Word був відкритий, майстер попросить закрити всі
-вікна Word і повторити спробу — це потрібно, щоб оновити файл надбавки, поки
-Word не тримає його відкритим.
+If Word was open during installation, the wizard will ask you to close all
+Word windows and try again — this is needed to update the add-in file while
+Word isn't holding it open.
 
-## Оновлення до нової версії
+## Updating to a new version
 
-Просто завантажте новіший `MD-Word-Setup-<версія>.exe` і запустіть його —
-**видаляти стару версію заздалегідь не потрібно**. Інсталятор сам замінить
-файли на місці та оновить реєстрацію.
+Just download the newer `MD-Word-Setup-<version>.exe` and run it —
+**there's no need to uninstall the old version first**. The installer
+replaces the files in place and updates the registration itself.
 
-## Видалення
+## Uninstalling
 
-Через Windows: **Параметри → Програми → Встановлені програми** (або
-класична «Програми та компоненти» в Панелі керування) → знайдіть «MD-Word»
-→ **Видалити**. Усі реєстрові ключі та файли надбавки (разом із логом і
-тимчасовою текою) будуть прибрані повністю.
+Through Windows: **Settings → Apps → Installed apps** (or the classic
+"Programs and Features" in Control Panel) → find "MD-Word" → **Uninstall**.
+All registry keys and add-in files (along with the log and temp folder)
+will be removed completely.
 
-Якщо запису немає в списку програм, запустіть деінсталятор напряму:
+If there's no entry in the apps list, run the uninstaller directly:
 
 ```
 %LOCALAPPDATA%\Programs\MD-Word\unins000.exe
 ```
 
-## Попередження SmartScreen
+## SmartScreen warning
 
-Інсталятор поки не підписаний сертифікатом підпису коду, тому Windows
-SmartScreen може показати попередження на кшталт «Windows захистила ваш
-комп'ютер».
+The installer is not signed with a code-signing certificate (a deliberate
+decision at this stage), so Windows SmartScreen may show a warning like
+"Windows protected your PC".
 
-Щоб продовжити встановлення:
+To proceed with installation:
 
-1. Натисніть **«Додаткові відомості»**.
-2. Натисніть **«Виконати все одно»**.
+1. Click **"More info"**.
+2. Click **"Run anyway"**.
 
-Це очікувана поведінка для непідписаних інсталяторів і не означає, що файл
-шкідливий — просто в нього поки немає репутації у SmartScreen.
+This is expected behavior for unsigned installers and doesn't mean the file
+is malicious — it just doesn't have a SmartScreen reputation yet.
 
-## Діагностика проблем
+## Troubleshooting
 
-Якщо надбавка не з'явилася у Word або клацання кнопки не спрацьовує,
-перегляньте лог-файл:
+If the add-in doesn't show up in Word, or clicking a button doesn't do
+anything, check the log file:
 
 ```
 %LOCALAPPDATA%\MD-Word\mdword.log
 ```
 
-Файл містить дату/час і опис кожної помилки чи попередження, включно з
-повним стеком виключення — корисно додати його вміст, якщо повідомляєте
-про проблему.
+The file contains a date/time and description of every error or warning,
+including the full exception stack — useful to include if you're reporting
+an issue.
 
-## Відомі обмеження
+## Known limitations
 
-- Код-спани з LaTeX-розділювачами (наприклад, `` `\(x\)` `` у тексті) можуть
-  бути переписані на `` `$x$` `` — препроцесор формул поки не розпізнає межі
-  inline-код-спанів. Рідкісний випадок (документація про саму розмітку
-  LaTeX); вміст звичайних код-блоків і код-спанів без LaTeX-розділювачів не
-  зачіпається.
+- Code spans with LaTeX delimiters (e.g. `` `\(x\)` `` in text) may be
+  rewritten as `` `$x$` `` — the formula preprocessor doesn't yet recognize
+  inline code span boundaries. A rare case (documentation about LaTeX
+  markup itself); regular code blocks and code spans without LaTeX
+  delimiters are unaffected.
 
-## Мінімальні вимоги
+## Minimum requirements
 
-- Windows 10 або Windows 11.
-- Microsoft Word 2016 або новіший (підтримуються як 32-, так і 64-бітні
-  збірки Word).
-- .NET Framework 4.8 (входить до складу Windows 10/11 — додатково
-  встановлювати не потрібно).
+- Windows 10 or Windows 11.
+- Microsoft Word 2016 or newer (both 32-bit and 64-bit Word builds are
+  supported).
+- .NET Framework 4.8 (included with Windows 10/11 — no separate install
+  needed).
 
-## Для розробників
+## For developers
 
-`tools/` містить скрипти для локальної реєстрації надбавки й e2e-тестів без
-інсталятора. Збірка самого інсталятора — `installer/build-installer.ps1`
-(потребує встановленого Inno Setup 6:
-`winget install -e --id JRSoftware.InnoSetup`). Ліцензії та версії
-використаних сторонніх бібліотек — `docs/IDS.md`.
+`tools/` contains scripts to register the add-in locally and run the e2e
+test without the installer. The installer itself is built with
+`installer/build-installer.ps1` (requires Inno Setup 6:
+`winget install -e --id JRSoftware.InnoSetup`). Third-party licenses and
+shipped versions are listed in
+[THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md).
 
-## Ліцензія
+## License
 
-[MIT](LICENSE).
+[MIT](LICENSE). Third-party components are listed in
+[THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md).

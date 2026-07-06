@@ -1,7 +1,7 @@
 ﻿<#
 .SYNOPSIS
     Removes every HKCU registry key written by tools\register-dev.ps1 for
-    MdWord.AddIn.Connect (PLAN.md Phase 3) — clean revert, no leftovers.
+    MdWord.AddIn.Connect (the initial plan, Phase 3) — clean revert, no leftovers.
 
 .DESCRIPTION
     Deletes (each best-effort, missing keys are not an error):
@@ -31,11 +31,11 @@ $keysToRemove = @(
 foreach ($key in $keysToRemove) {
     if (Test-Path $key) {
         Remove-Item -Path $key -Recurse -Force
-        Write-Host "Видалено: $key" -ForegroundColor Green
+        Write-Host "Removed: $key" -ForegroundColor Green
     }
     else {
-        Write-Host "Відсутній (вже видалено або не реєструвався): $key" -ForegroundColor DarkGray
+        Write-Host "Absent (already removed or never registered): $key" -ForegroundColor DarkGray
     }
 }
 
-Write-Host "Готово — усі ключі MdWord.AddIn.Connect під HKCU видалено." -ForegroundColor Green
+Write-Host "Done — all MdWord.AddIn.Connect keys under HKCU removed." -ForegroundColor Green

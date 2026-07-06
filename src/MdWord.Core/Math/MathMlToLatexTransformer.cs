@@ -12,7 +12,7 @@ namespace MdWord.Core.Math;
 /// MathML → LaTeX via the vendored xsltml 2.1.2 library (<c>mmltex.xsl</c> +
 /// its includes: tokens/glayout/scripts/tables/entities/cmarkup — see
 /// <c>Resources/mmltex/README-xsltml.txt</c> for the license, and
-/// <c>docs/IDS.md</c> for the source/version/license summary). Unlike
+/// <c>THIRD-PARTY-NOTICES.md</c> for the source/version/license summary). Unlike
 /// <see cref="MathMlToOmmlTransformer"/>/<see cref="OmmlToMathMlTransformer"/>,
 /// this transform is entirely self-contained (no externally-supplied path):
 /// the library ships as embedded resources and is extracted to a temp
@@ -113,7 +113,7 @@ internal static class MathMlToLatexTransformer
 
             if (resourceName == null)
             {
-                throw new ConvertException($"Embedded resource '{fileName}' (mmltex) не знайдено в збірці MdWord.Core.");
+                throw new ConvertException($"Embedded resource '{fileName}' (mmltex) was not found in the MdWord.Core assembly.");
             }
 
             var targetPath = Path.Combine(targetDir, fileName);

@@ -11,7 +11,7 @@ namespace MdWord.Core.Math;
 /// Lazy-singleton Jint engine that loads the vendored KaTeX bundle
 /// (<c>Resources/katex.min.js</c>, embedded resource) once and exposes
 /// LaTeX→MathML rendering. The first call is slow (KaTeX is a ~270KB UMD
-/// bundle to parse/execute) — that is expected per PLAN.md Phase 2; a
+/// bundle to parse/execute) — that is expected per the initial plan, Phase 2; a
 /// background warm-up on add-in startup is Phase 6 scope, not this one.
 ///
 /// Jint's <see cref="Engine"/> is not safe for concurrent use from multiple
@@ -51,7 +51,7 @@ function tex2mml(tex, display) {
             .LimitMemory(256 * 1024 * 1024));
         engine.Execute(katexSource);
 
-        // Heads-up from PLAN.md's Phase 2 risk list: katex.min.js is a UMD
+        // Heads-up from the initial plan's Phase 2 risk list: katex.min.js is a UMD
         // bundle whose top-level `this` needs to resolve to a global object
         // for `global.katex = factory()` to stick. Verified empirically that
         // Jint 4.10.1 resolves top-level `this` to its global object, so no
@@ -64,7 +64,7 @@ function tex2mml(tex, display) {
 
             if (engine.GetValue("katex").IsUndefined())
             {
-                throw new ConvertException("KaTeX не завантажився у JS-двигуні (Jint): 'katex' лишається undefined навіть після window/self-шиму.");
+                throw new ConvertException("KaTeX did not load in the JS engine (Jint): 'katex' is still undefined even after the window/self shim.");
             }
         }
 
@@ -80,7 +80,7 @@ function tex2mml(tex, display) {
 
         if (resourceName == null)
         {
-            throw new ConvertException("Embedded resource 'katex.min.js' не знайдено в збірці MdWord.Core.");
+            throw new ConvertException("Embedded resource 'katex.min.js' was not found in the MdWord.Core assembly.");
         }
 
         using var stream = assembly.GetManifestResourceStream(resourceName);

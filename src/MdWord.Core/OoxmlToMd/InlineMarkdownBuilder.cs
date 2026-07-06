@@ -171,13 +171,13 @@ internal static class InlineMarkdownBuilder
                     // need separate handling anyway).
                     break;
                 case Drawing:
-                    context.Warnings.Add("Зображення пропущено (не підтримується).");
+                    context.Warnings.Add("Image skipped (not supported).");
                     break;
                 case SdtRun:
-                    // Inline content control -- skip per PLAN.md's explicit
+                    // Inline content control -- skip per the initial plan's explicit
                     // skip-with-warning list, same as the block-level SdtBlock
                     // case (DocumentMarkdownBuilder's default warning branch).
-                    context.Warnings.Add("Контент-контроль пропущено (не підтримується).");
+                    context.Warnings.Add("Content control skipped (not supported).");
                     break;
 
                 // Bookmarks, proofErr, smart tags, rsid-only noise, etc. —
@@ -199,10 +199,10 @@ internal static class InlineMarkdownBuilder
                     atoms.Add(Atom.TextAtom(text.Text, format, isCode));
                     break;
                 case FootnoteReference:
-                    context.Warnings.Add("Виноску пропущено (не підтримується).");
+                    context.Warnings.Add("Footnote skipped (not supported).");
                     break;
                 case EndnoteReference:
-                    context.Warnings.Add("Кінцеву виноску пропущено (не підтримується).");
+                    context.Warnings.Add("Endnote skipped (not supported).");
                     break;
                 case Break br:
                     // Only a text-wrapping break (Shift+Enter) maps to a Markdown
@@ -341,7 +341,7 @@ internal static class InlineMarkdownBuilder
             }
         }
 
-        context.Warnings.Add("Внутрішнє посилання (закладка) без зовнішньої адреси — вставлено як звичайний текст.");
+        context.Warnings.Add("An internal link (bookmark) with no external address — inserted as plain text.");
         return label;
     }
 
@@ -356,7 +356,7 @@ internal static class InlineMarkdownBuilder
         }
 
         context.Warnings.Add(
-            $"Формулу не вдалося конвертувати в LaTeX ({failureReason ?? "OMML2MML.XSL недоступний"}) — вставлено як `[formula]`.");
+            $"Could not convert the formula to LaTeX ({failureReason ?? "OMML2MML.XSL unavailable"}) — inserted as `[formula]`.");
         return "`[formula]`";
     }
 

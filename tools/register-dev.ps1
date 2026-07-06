@@ -1,9 +1,9 @@
 ﻿<#
 .SYNOPSIS
-    Registers MdWord.AddIn.Connect (PLAN.md Phase 3) as a per-user (HKCU-only,
-    no admin rights) Word COM add-in, pointing CodeBase at the local dev build
-    output. Same registry schema the future installer (Phase 5) will write —
-    see PLAN.md's Phase 5 registry table and docs/IDS.md for CLSID_Connect.
+    Registers MdWord.AddIn.Connect (the initial plan, Phase 3) as a per-user
+    (HKCU-only, no admin rights) Word COM add-in, pointing CodeBase at the
+    local dev build output. Same registry schema installer/MdWord.iss's
+    [Registry] section writes — see there for CLSID_Connect.
 
 .DESCRIPTION
     Writes:
@@ -36,7 +36,7 @@ $repoRoot = Split-Path -Parent $PSScriptRoot
 $dllPath = Join-Path $repoRoot 'src\MdWord.AddIn\bin\Debug\net48\MdWord.AddIn.dll'
 
 if (-not (Test-Path -LiteralPath $dllPath)) {
-    throw "Не знайдено $dllPath. Спочатку виконайте: dotnet build (репозиторій, або хоча б src\MdWord.AddIn)."
+    throw "Not found: $dllPath. Build first: dotnet build (the repository, or at least src\MdWord.AddIn)."
 }
 
 # file:// URI. Deliberately NOT [Uri]::AbsoluteUri: that percent-encodes
@@ -103,7 +103,7 @@ function Set-RegistryValues {
     }
 }
 
-Write-Host "Реєстрація $ProgId (CLSID $ClsidConnect) -> $codeBase" -ForegroundColor Cyan
+Write-Host "Registering $ProgId (CLSID $ClsidConnect) -> $codeBase" -ForegroundColor Cyan
 
 # HKCU\Software\Classes\MdWord.AddIn.Connect\CLSID
 Set-RegistryValues -Path "HKCU:\Software\Classes\$ProgId\CLSID" -Values @{
@@ -140,7 +140,7 @@ if ([Environment]::Is64BitOperatingSystem) {
     $officeBitness = if ($winwordPath) { Get-ExeMachineType -Path $winwordPath } else { $null }
 
     if ($officeBitness -eq 'x86') {
-        Write-Host "Виявлено 32-бітний Word на 64-бітній Windows ($winwordPath) — дзеркалимо ключі під WOW6432Node." -ForegroundColor Cyan
+        Write-Host "Detected 32-bit Word on 64-bit Windows ($winwordPath) — mirroring the keys under WOW6432Node." -ForegroundColor Cyan
         Set-RegistryValues -Path "HKCU:\Software\Classes\WOW6432Node\CLSID\$ClsidConnect\InprocServer32" -Values $inprocValues
         Set-RegistryValues -Path "HKCU:\Software\Classes\WOW6432Node\CLSID\$ClsidConnect\InprocServer32\$AssemblyVersion" -Values $inprocValuesVersioned
         Set-RegistryValues -Path "HKCU:\Software\Classes\WOW6432Node\CLSID\$ClsidConnect\ProgId" -Values @{
@@ -148,10 +148,10 @@ if ([Environment]::Is64BitOperatingSystem) {
         }
     }
     elseif ($officeBitness -eq 'x64') {
-        Write-Host "Виявлено 64-бітний Word — WOW6432Node дзеркало не потрібне." -ForegroundColor DarkGray
+        Write-Host "Detected 64-bit Word — no WOW6432Node mirror needed." -ForegroundColor DarkGray
     }
     else {
-        Write-Warning "Не вдалося визначити розрядність Word.exe (шлях не знайдено або PE-заголовок нечитабельний) — WOW6432Node дзеркало пропущено. Якщо у вас 32-бітний Office на 64-бітній Windows, зареєструйте вручну."
+        Write-Warning "Could not determine Word's bitness (path not found or the PE header is unreadable) — the WOW6432Node mirror was skipped. If you run 32-bit Office on 64-bit Windows, register it manually."
     }
 }
 
@@ -162,4 +162,4 @@ Set-RegistryValues -Path "HKCU:\Software\Microsoft\Office\Word\Addins\$ProgId" -
     'LoadBehavior'  = @{ Value = 3;                                  Type = 'DWord' }
 }
 
-Write-Host "Готово. Запустіть Word і перевірте групу «Markdown» на вкладці «Основне», або tools\e2e-test.ps1." -ForegroundColor Green
+Write-Host "Done. Start Word and check the Markdown group on the Home tab, or run tools\e2e-test.ps1." -ForegroundColor Green

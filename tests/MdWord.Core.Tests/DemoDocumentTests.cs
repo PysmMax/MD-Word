@@ -9,7 +9,7 @@ using Xunit;
 namespace MdWord.Core.Tests;
 
 /// <summary>
-/// End-of-Phase-1 sweep: samples/demo.md (PLAN.md §5 — every MVP element in
+/// End-of-Phase-1 sweep: samples/demo.md (initial plan §5 — every MVP element in
 /// one document) must convert to a valid docx. This is the automated half of
 /// the Phase 1 checkpoint; the manual half (open demo.docx in Word, eyeball
 /// heading styles/table borders) is the user's, not ours to self-certify.
@@ -108,8 +108,8 @@ public class DemoDocumentTests
         using var doc = WordprocessingDocument.Open(stream, false);
         var bodyText = doc.MainDocumentPart.Document.Body.InnerText;
 
-        Assert.Contains("текстом, а також", bodyText);
-        Assert.DoesNotContain("текстом,а також", bodyText);
+        Assert.Contains("text, as well as", bodyText);
+        Assert.DoesNotContain("text,as well as", bodyText);
     }
 
     [Fact]

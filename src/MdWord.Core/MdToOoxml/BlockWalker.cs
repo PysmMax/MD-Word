@@ -15,7 +15,7 @@ namespace MdWord.Core.MdToOoxml;
 
 /// <summary>
 /// Maps top-level Markdig blocks to OOXML body content. Grows one block type
-/// per PLAN.md Phase 1 increment; see <see cref="InlineRunBuilder"/> for the
+/// per the initial plan, Phase 1 increment; see <see cref="InlineRunBuilder"/> for the
 /// shared inline (run-level) mapping every block delegates to.
 /// </summary>
 internal static class BlockWalker
@@ -67,8 +67,8 @@ internal static class BlockWalker
                     yield return BuildTable(table, mainPart, mathContext);
                     break;
                 case HtmlBlock htmlBlock:
-                    // Per PLAN.md Phase 1: "HtmlInline/HtmlBlock → literal-текст
-                    // (безпечна деградація)" — raw HTML is never dropped, just shown
+                    // Per the initial plan, Phase 1: "HtmlInline/HtmlBlock →
+                    // literal text (safe degradation)" — raw HTML is never dropped, just shown
                     // as its own source text.
                     yield return BuildHtmlBlockParagraph(htmlBlock);
                     break;
@@ -77,8 +77,8 @@ internal static class BlockWalker
                     // visible output -- silent skip is correct, not content loss.
                     break;
                 default:
-                    // Never drop content silently (PLAN.md §6) -- at minimum warn.
-                    mathContext.Warnings.Add($"Блок '{block.GetType().Name}' пропущено (не підтримується).");
+                    // Never drop content silently (the initial plan §6) -- at minimum warn.
+                    mathContext.Warnings.Add($"Block '{block.GetType().Name}' skipped (not supported).");
                     break;
             }
         }
@@ -129,8 +129,8 @@ internal static class BlockWalker
                     yield return BuildTable(table, mainPart, mathContext);
                     break;
                 default:
-                    // Never drop content silently (PLAN.md §6) -- at minimum warn.
-                    mathContext.Warnings.Add($"Блок '{nested.GetType().Name}' всередині цитати пропущено (не підтримується).");
+                    // Never drop content silently (the initial plan §6) -- at minimum warn.
+                    mathContext.Warnings.Add($"Block '{nested.GetType().Name}' inside a quote skipped (not supported).");
                     break;
             }
         }
@@ -159,7 +159,7 @@ internal static class BlockWalker
                 return new Paragraph(new MathParagraph(officeMath));
             }
 
-            mathContext.Warnings.Add($"Формулу `{tex}` вставлено як текст: {failureReason}");
+            mathContext.Warnings.Add($"Formula `{tex}` inserted as text: {failureReason}");
         }
 
         return BuildLiteralMathBlockParagraph(tex);
@@ -256,8 +256,8 @@ internal static class BlockWalker
                         yield return BuildTable(table, mainPart, mathContext);
                         break;
                     default:
-                        // Never drop content silently (PLAN.md §6) -- at minimum warn.
-                        mathContext.Warnings.Add($"Блок '{nested.GetType().Name}' всередині пункту списку пропущено (не підтримується).");
+                        // Never drop content silently (the initial plan §6) -- at minimum warn.
+                        mathContext.Warnings.Add($"Block '{nested.GetType().Name}' inside a list item skipped (not supported).");
                         break;
                 }
             }

@@ -9,8 +9,8 @@ using Xunit;
 namespace MdWord.Core.Tests;
 
 /// <summary>
-/// Регресії на дефекти, знайдені користувачем у живому Word
-/// (live tests/test 001.txt). До відповідних фіксів Стадії 1 ці тести падають.
+/// Regressions for defects the user found in live Word
+/// (docs/qa/live-tests/test 001.txt). Before the corresponding Stage 1 fixes, these tests fail.
 /// </summary>
 public class LiveBugRegressionTests
 {
@@ -37,7 +37,7 @@ public class LiveBugRegressionTests
     private static string ToMd(params OpenXmlElement[] bodyChildren) =>
         new MarkdownConverter(null).ToMarkdown(BuildFlatOpc(bodyChildren)).Markdown;
 
-    // --- LIVE-1: <br> у клітинці на ВСТАВЦІ стає розривом, не текстом -----
+    // --- LIVE-1: <br> in a table cell becomes a line break on PASTE, not text -----
 
     [Fact]
     public void Live1_Paste_BrInsideTableCell_BecomesLineBreak_NotLiteralText()
@@ -50,7 +50,7 @@ public class LiveBugRegressionTests
         Assert.Contains("y", cell.InnerText);
     }
 
-    // --- LIVE-2: [1] при копіюванні не перетворюється на \[1\] (→ формула) -
+    // --- LIVE-2: [1] must not be escaped into \[1\] on copy (reads as math) -
 
     [Fact]
     public void Live2_Copy_SquareBracketCitation_IsNotEscapedIntoMathDelimiters()
@@ -61,7 +61,7 @@ public class LiveBugRegressionTests
         Assert.DoesNotContain("\\[", md);
     }
 
-    // --- LIVE-3: розрив сторінки не лишає зайвий "\" --------------------
+    // --- LIVE-3: a page break leaves no stray "\" --------------------
 
     [Fact]
     public void Live3_Copy_PageBreak_DoesNotLeaveStrayBackslash()
@@ -75,7 +75,7 @@ public class LiveBugRegressionTests
         Assert.Contains("сторінка 2", md);
     }
 
-    // --- LIVE-4: жирний рядок із хвостовим пробілом дає валідний MD ------
+    // --- LIVE-4: a bold run with a trailing space yields valid MD ------
 
     [Fact]
     public void Live4_Copy_BoldRunWithTrailingSpace_ProducesValidBold()
@@ -88,7 +88,7 @@ public class LiveBugRegressionTests
         Assert.DoesNotContain("**Система **", md);
     }
 
-    // --- LIVE-5: символ шрифту Symbol (δ) не зникає ---------------------
+    // --- LIVE-5: a Symbol-font character (δ) does not vanish ---------------------
 
     [Fact]
     public void Live5_Copy_SymbolFontGreekLetter_IsMapped_NotDropped()

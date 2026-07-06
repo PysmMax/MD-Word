@@ -11,8 +11,8 @@ namespace MdWord.Core.Math;
 /// forward LaTeX → OMML conveyor): never throws — <see cref="TryConvert"/>
 /// reports failure so callers can degrade a single formula to literal
 /// <c>`[formula]`</c> text without aborting the whole document (Phase 4
-/// brief: "формула, що провалює цей конвеєр повністю, має деградувати до
-/// `[formula]` літерального тексту + Warning, ніколи не throw").
+/// brief: "a formula that fails this pipeline entirely must degrade to
+/// literal `[formula]` text + a Warning, never throw").
 /// </summary>
 internal static class OmmlToLatexConverter
 {
@@ -32,7 +32,7 @@ internal static class OmmlToLatexConverter
 
         if (xslPaths?.Omml2MmlXsl == null)
         {
-            failureReason = "Omml2MmlXsl не надано — конвертація формули у LaTeX недоступна.";
+            failureReason = "Omml2MmlXsl not provided — formula-to-LaTeX conversion is unavailable.";
             return false;
         }
 
@@ -45,7 +45,7 @@ internal static class OmmlToLatexConverter
 
             if (string.IsNullOrEmpty(trimmed))
             {
-                failureReason = "mmltex повернув порожній LaTeX.";
+                failureReason = "mmltex returned empty LaTeX.";
                 return false;
             }
 

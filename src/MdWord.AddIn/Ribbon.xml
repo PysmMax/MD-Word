@@ -2,10 +2,10 @@
   <ribbon><tabs>
     <tab idMso="TabHome">
       <group id="grpMdWord" label="Markdown" insertAfterMso="GroupClipboard">
-        <button id="btnPasteMd" label="Вставити Markdown" size="large" imageMso="Paste"
-                onAction="OnPasteMarkdown" screentip="Вставити Markdown з буфера як форматований текст"/>
-        <button id="btnCopyMd" label="Копіювати Markdown" size="large" imageMso="Copy"
-                onAction="OnCopyMarkdown" screentip="Скопіювати виділене як Markdown"/>
+        <button id="btnPasteMd" label="Insert Markdown" size="large" imageMso="Paste"
+                onAction="OnPasteMarkdown" screentip="Insert Markdown from the clipboard as formatted text"/>
+        <button id="btnCopyMd" label="Copy as Markdown" size="large" imageMso="Copy"
+                onAction="OnCopyMarkdown" screentip="Copy the selection as Markdown"/>
       </group>
     </tab>
   </tabs></ribbon>

@@ -86,7 +86,7 @@ internal static class DocumentMarkdownBuilder
                         // already applies.
                         break;
                     default:
-                        _context.Warnings.Add($"Елемент '{element.LocalName}' пропущено (не підтримується).");
+                        _context.Warnings.Add($"Element '{element.LocalName}' skipped (not supported).");
                         break;
                 }
             }
@@ -158,7 +158,7 @@ internal static class DocumentMarkdownBuilder
 
                 if (!_context.Numbering.TryResolve(numId, ilvl, out var isOrdered))
                 {
-                    _context.Warnings.Add($"Невідомий numId={numId} — оброблено як маркований список.");
+                    _context.Warnings.Add($"Unknown numId={numId} — handled as a bulleted list.");
                     isOrdered = false;
                 }
 
@@ -239,7 +239,7 @@ internal static class DocumentMarkdownBuilder
             }
 
             _context.Warnings.Add(
-                $"Формулу (блок) не вдалося конвертувати в LaTeX ({failureReason ?? "OMML2MML.XSL недоступний"}) — вставлено як `[formula]`.");
+                $"Could not convert the (block) formula to LaTeX ({failureReason ?? "OMML2MML.XSL unavailable"}) — inserted as `[formula]`.");
             return "`[formula]`";
         }
 

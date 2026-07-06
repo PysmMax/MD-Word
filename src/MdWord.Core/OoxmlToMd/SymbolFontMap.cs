@@ -44,7 +44,7 @@ internal static class SymbolFontMap
             return mapped.ToString();
         }
 
-        context.Warnings.Add($"Символ (шрифт {font ?? "?"}, код {raw ?? "?"}) пропущено — не в таблиці SymbolFontMap.");
+        context.Warnings.Add($"A symbol (font {font ?? "?"}, code {raw ?? "?"}) was skipped — not in the SymbolFontMap table.");
         return string.Empty;
     }
 }

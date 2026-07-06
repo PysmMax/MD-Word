@@ -5,7 +5,7 @@ namespace MdWord.AddIn;
 
 /// <summary>
 /// Minimal file logger to <c>%LOCALAPPDATA%\MD-Word\mdword.log</c> — no
-/// external logging framework (PLAN.md Phase 3: "a handful of lines, not a
+/// external logging framework (the initial plan, Phase 3: "a handful of lines, not a
 /// NuGet dependency"). Every COM callback in <see cref="Connect"/> logs here
 /// before showing its <c>MessageBox</c>, so a disabled add-in
 /// (<c>LoadBehavior</c> flipping from 3 to 2 after a thrown

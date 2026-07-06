@@ -7,8 +7,8 @@ using MdWord.Core;
 namespace MdWord.AddIn;
 
 /// <summary>
-/// The actual Word-object-model orchestration for "Вставити Markdown"
-/// (PLAN.md Phase 3). Deliberately kept out of <see cref="Connect"/> so that
+/// The actual Word-object-model orchestration for "Insert Markdown"
+/// (initial plan, Phase 3). Deliberately kept out of <see cref="Connect"/> so that
 /// every reference to <c>MdWord.Core</c> types lives in one place, JIT'd only
 /// when this class's methods are first entered — by then
 /// <see cref="Connect"/>'s static constructor has already installed the
@@ -20,7 +20,7 @@ namespace MdWord.AddIn;
 /// </summary>
 internal static class WordActions
 {
-    private const string UndoRecordName = "Вставити Markdown";
+    private const string UndoRecordName = "Insert Markdown";
 
     /// <summary>Background warm-up passthrough (see Connect.OnStartupComplete).</summary>
     public static void WarmUpMathEngine()
@@ -33,7 +33,7 @@ internal static class WordActions
         {
             // Warm-up is best-effort: a failure here must never surface UI —
             // the real conversion path has its own degrade-and-warn handling.
-            Logger.LogWarning($"Фоновий прогрів KaTeX не вдався ({ex.Message}).");
+            Logger.LogWarning($"Background KaTeX warm-up failed ({ex.Message}).");
         }
     }
 
@@ -51,9 +51,9 @@ internal static class WordActions
         if (IsPasteBlockedByProtectedViewOrReadOnly(wordApp))
         {
             MessageBox.Show(
-                "Документ відкрито в захищеному перегляді або лише для читання — " +
-                "вставка Markdown неможлива. Увімкніть редагування (або закрийте " +
-                "захищений перегляд) і спробуйте ще раз.",
+                "The document is open in Protected View or read-only, so " +
+                "Markdown cannot be inserted. Enable editing (or close " +
+                "Protected View) and try again.",
                 "MD-Word",
                 MessageBoxButtons.OK,
                 MessageBoxIcon.Information);
@@ -65,19 +65,19 @@ internal static class WordActions
         if (string.IsNullOrWhiteSpace(markdown))
         {
             MessageBox.Show(
-                "Буфер обміну порожній або не містить тексту.",
+                "The clipboard is empty or contains no text.",
                 "MD-Word",
                 MessageBoxButtons.OK,
                 MessageBoxIcon.Information);
             return;
         }
 
-        const int MaxInputChars = 1_000_000; // PLAN.md Phase 6: warn on >1 MB of text
+        const int MaxInputChars = 1_000_000; // Per the initial plan, Phase 6: warn on >1 MB of text
         if (markdown.Length > MaxInputChars)
         {
             MessageBox.Show(
-                $"У буфері обміну забагато тексту ({markdown.Length:N0} символів; максимум {MaxInputChars:N0}). " +
-                "Вставте менший фрагмент.",
+                $"The clipboard has too much text ({markdown.Length:N0} characters; maximum {MaxInputChars:N0}). " +
+                "Paste a smaller fragment.",
                 "MD-Word",
                 MessageBoxButtons.OK,
                 MessageBoxIcon.Warning);
@@ -107,7 +107,7 @@ internal static class WordActions
     /// Primary path: <c>Range.InsertXML</c> on the Flat OPC string. Falls
     /// back to writing <see cref="OoxmlResult.DocxBytes"/> to a temp .docx
     /// and <c>Range.InsertFile</c> on <see cref="COMException"/> — per
-    /// PLAN.md Phase 3's documented fallback. Step 0's WebFetch of the
+    /// the initial plan, Phase 3's documented fallback. Step 0's WebFetch of the
     /// official <c>Range.InsertXML</c>/<c>Range.WordOpenXML</c> VBA reference
     /// pages did not confirm or deny Flat-OPC-specific behavior (the
     /// InsertXML page's own example is generic custom XML, not
@@ -123,7 +123,7 @@ internal static class WordActions
         }
         catch (COMException ex)
         {
-            Logger.LogWarning($"Range.InsertXML провалився ({ex.Message}), пробуємо InsertFile.");
+            Logger.LogWarning($"Range.InsertXML failed ({ex.Message}), trying InsertFile.");
             InsertViaTempFile(wordApp, result);
         }
     }
@@ -152,7 +152,7 @@ internal static class WordActions
     }
 
     /// <summary>
-    /// Word selection → Markdown → clipboard (PLAN.md Phase 4). Mirror of
+    /// Word selection → Markdown → clipboard (the initial plan, Phase 4). Mirror of
     /// <see cref="PasteMarkdown"/>'s structure: empty-selection no-op,
     /// resolve XSL paths, delegate to <c>MdWord.Core</c>, surface warnings
     /// via StatusBar. Unlike the paste path there is no Word-document
@@ -169,21 +169,21 @@ internal static class WordActions
         }
         catch (Exception ex)
         {
-            Logger.LogWarning($"Не вдалося прочитати виділення ({ex.Message}) — вважаємо його порожнім.");
+            Logger.LogWarning($"Could not read the selection ({ex.Message}) — treating it as empty.");
             isEmpty = true;
         }
 
         if (isEmpty)
         {
             MessageBox.Show(
-                "Виділіть текст у документі перед копіюванням у Markdown.",
+                "Select text in the document before copying it as Markdown.",
                 "MD-Word",
                 MessageBoxButtons.OK,
                 MessageBoxIcon.Information);
             return;
         }
 
-        const int MaxSelectionChars = 1_000_000; // PLAN.md Phase 6: warn on >1 MB of text
+        const int MaxSelectionChars = 1_000_000; // Per the initial plan, Phase 6: warn on >1 MB of text
         int selectionLength = 0;
         try
         {
@@ -191,14 +191,14 @@ internal static class WordActions
         }
         catch (Exception ex)
         {
-            Logger.LogWarning($"Не вдалося виміряти розмір виділення ({ex.Message}) — продовжуємо без ліміту.");
+            Logger.LogWarning($"Could not measure the selection size ({ex.Message}) — continuing without a limit.");
         }
 
         if (selectionLength > MaxSelectionChars)
         {
             MessageBox.Show(
-                $"Виділення завелике ({selectionLength:N0} символів; максимум {MaxSelectionChars:N0}). " +
-                "Виділіть і скопіюйте менший фрагмент.",
+                $"The selection is too large ({selectionLength:N0} characters; maximum {MaxSelectionChars:N0}). " +
+                "Select and copy a smaller fragment.",
                 "MD-Word",
                 MessageBoxButtons.OK,
                 MessageBoxIcon.Warning);
@@ -216,7 +216,7 @@ internal static class WordActions
             // ArgumentException on an empty string, so guard explicitly
             // rather than let that escape as a confusing error dialog.
             MessageBox.Show(
-                "Не вдалося отримати Markdown із виділення (можливо, воно містить лише непідтримуваний вміст).",
+                "Could not produce Markdown from the selection (it may contain only unsupported content).",
                 "MD-Word",
                 MessageBoxButtons.OK,
                 MessageBoxIcon.Information);
@@ -271,7 +271,7 @@ internal static class WordActions
         }
         catch (Exception ex)
         {
-            Logger.LogWarning($"Не вдалося перевірити захищений перегляд/лише-для-читання ({ex.Message}) — продовжуємо.");
+            Logger.LogWarning($"Could not check Protected View/read-only state ({ex.Message}) — continuing.");
             return false;
         }
     }
@@ -293,7 +293,7 @@ internal static class WordActions
         }
         catch (Exception ex)
         {
-            Logger.LogWarning($"Не вдалося прочитати wordApp.Path ({ex.Message}) — формули будуть текстом.");
+            Logger.LogWarning($"Could not read wordApp.Path ({ex.Message}) — formulas will be plain text.");
             return null;
         }
 
@@ -308,7 +308,7 @@ internal static class WordActions
         if (!File.Exists(mml2Omml) || !File.Exists(omml2Mml))
         {
             Logger.LogWarning(
-                $"MML2OMML.XSL/OMML2MML.XSL не знайдено в '{wordPath}' — формули будуть вставлені як звичайний текст.");
+                $"MML2OMML.XSL/OMML2MML.XSL not found in '{wordPath}' — formulas will be inserted as plain text.");
             return null;
         }
 

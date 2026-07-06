@@ -1,7 +1,7 @@
 <Project>
   <PropertyGroup>
-    <Version>1.0.0</Version>
-    <AssemblyVersion>1.0.0.0</AssemblyVersion>   <!-- НЕ міняти між релізами: зашита в COM-реєстрацію -->
+    <Version>1.0.1</Version>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>   <!-- Do NOT change between releases: baked into the COM registration -->
     <FileVersion>$(Version)</FileVersion>
     <LangVersion>10</LangVersion>
   </PropertyGroup>

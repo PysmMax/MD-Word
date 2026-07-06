@@ -1,41 +1,41 @@
-# Заголовок H1
+# Heading H1
 
-## Заголовок H2
+## Heading H2
 
-### Заголовок H3
+### Heading H3
 
-#### Заголовок H4
+#### Heading H4
 
-##### Заголовок H5
+##### Heading H5
 
-###### Заголовок H6
+###### Heading H6
 
-Звичайний абзац із **жирним**, *курсивом*, ***жирним курсивом*** і ~~закресленим~~ текстом,
-а також `інлайн-кодом` і [посиланням на приклад](https://example.com/).
+A regular paragraph with **bold**, *italic*, ***bold italic*** and ~~strikethrough~~ text,
+as well as `inline code` and a [link to an example](https://example.com/).
 
-Рядок зі спецсимволами markdown у звичайному тексті: * _ | # — вони не повинні ламати структуру.
+A line with markdown special characters in plain text: * _ | # — they must not break the structure.
 
-Кирилиця та емодзі: Привіт, світ! 🚀✅
+Cyrillic and emoji: Привіт, світ! 🚀✅
 
 ---
 
-| Колонка A | Колонка B | Колонка C |
+| Column A | Column B | Column C |
 | --- | --- | --- |
-| звичайний | **жирний** | *курсив* |
-| один | два | три |
-| `код` | [лінк](https://example.com/) | ~~закреслено~~ |
+| regular | **bold** | *italic* |
+| one | two | three |
+| `code` | [link](https://example.com/) | ~~struck~~ |
 
-- Пункт списку перший
-- Пункт списку другий
-  1. Вкладений впорядкований раз
-  2. Вкладений впорядкований два
-     - Вкладений маркований усередині впорядкованого
-- Пункт списку третій
+- First list item
+- Second list item
+  1. Nested ordered one
+  2. Nested ordered two
+     - Nested bullet inside the ordered list
+- Third list item
 
-1. Впорядкований пункт перший
-2. Впорядкований пункт другий
-   - Вкладений маркований
-3. Впорядкований пункт третій
+1. First ordered item
+2. Second ordered item
+   - Nested bullet item
+3. Third ordered item
 
 ```
 line one of code
@@ -44,14 +44,14 @@ line two of code
 
     indented code line
 
-> Цитата з **жирним** усередині цитати.
+> A quote with **bold** inside the quote.
 >
-> Другий абзац цитати.
+> Second paragraph of the quote.
 
-Інлайн-формула $E=mc^2$ у тексті (для Фази 2 — поки literal).
+Inline formula $E=mc^2$ in text.
 
 $$
 \sum_{i=1}^{n} i = \frac{n(n+1)}{2}
 $$
 
-Кінцевий абзац після усіх елементів.
+Final paragraph after all elements.

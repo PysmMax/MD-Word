@@ -1,4 +1,4 @@
-﻿; MD-Word — Inno Setup 6 script (Фаза 5, PLAN.md).
+﻿; MD-Word — Inno Setup 6 script.
 ;
 ; Per-user install (no admin rights, no UAC), upgrade-over-old via a fixed
 ; AppId, HKCU-only COM registration mirroring tools/register-dev.ps1 exactly.
@@ -9,7 +9,7 @@
 ;
 ; Registry-view note (read before touching [Registry] below): this installer
 ; runs as a 32-bit process by default (no ArchitecturesInstallIn64BitMode
-; directive — deliberate, see PLAN.md Фаза 5 and docs/IDS.md). Per Inno Setup 6
+; directive — deliberate). Per Inno Setup 6
 ; docs (jrsoftware.org/ishelp/topic_registrysection.htm and
 ; topic_setup_architecturesinstallin64bitmode.htm), a Root key with a "32"
 ; suffix (e.g. HKCU32) is valid and maps to the 32-bit registry view on ANY
@@ -53,7 +53,7 @@ UninstallDisplayName={#AppNameStr}
 MinVersion=10.0
 VersionInfoVersion={#AppVersion}
 VersionInfoProductName={#AppNameStr}
-VersionInfoDescription=Інсталятор надбавки MD-Word для Microsoft Word
+VersionInfoDescription=MD-Word add-in installer for Microsoft Word
 
 [InstallDelete]
 ; Upgrade-in-place otherwise leaves DLLs the new version no longer ships
@@ -64,6 +64,8 @@ Type: files; Name: "{app}\*.dll"
 
 [Files]
 Source: "..\out\publish\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs
+Source: "..\LICENSE"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\THIRD-PARTY-NOTICES.md"; DestDir: "{app}"; Flags: ignoreversion
 
 [UninstallDelete]
 ; README promises complete removal: the runtime log dir and the extracted
@@ -77,8 +79,8 @@ Type: filesandordirs; Name: "{%TEMP}\MdWord"
 ; Container keys that are exclusively ours but never targeted directly by
 ; any ValueName row below (only their children are) — without an explicit
 ; entry here, uninsdeletekey on the children leaves these two behind as
-; empty shells after uninstall (fails PLAN.md's Фаза 5 test-matrix item 3,
-; "деінсталяція -> ключі HKCU зникли"). Uninstall undoes [Registry] entries
+; empty shells after uninstall (fails the release test-matrix item
+; "uninstall -> HKCU keys gone"). Uninstall undoes [Registry] entries
 ; in REVERSE of install order, so placing these marker rows FIRST means
 ; they are the LAST thing undone at uninstall time — i.e. only after every
 ; child row below has already removed its own key, so these are found
@@ -135,7 +137,7 @@ Root: HKCU64; Subkey: "Software\Classes\CLSID\{#ClsidConnect}\ProgId"; ValueType
 ; NOT view-redirected (not under Software\Classes), written once.
 ; ---------------------------------------------------------------------
 Root: HKCU; Subkey: "Software\Microsoft\Office\Word\Addins\{#ProgId}"; ValueName: "FriendlyName"; ValueType: string; ValueData: "MD-Word"; Flags: uninsdeletekey
-Root: HKCU; Subkey: "Software\Microsoft\Office\Word\Addins\{#ProgId}"; ValueName: "Description"; ValueType: string; ValueData: "Надбавка MD-Word: вставка та копіювання Markdown у Word"; Flags: uninsdeletekey
+Root: HKCU; Subkey: "Software\Microsoft\Office\Word\Addins\{#ProgId}"; ValueName: "Description"; ValueType: string; ValueData: "MD-Word add-in: paste and copy Markdown in Word"; Flags: uninsdeletekey
 Root: HKCU; Subkey: "Software\Microsoft\Office\Word\Addins\{#ProgId}"; ValueName: "LoadBehavior"; ValueType: dword; ValueData: "3"; Flags: uninsdeletekey
 
 [Code]
@@ -210,8 +212,8 @@ begin
   while FindWindowByClassName('OpusApp') <> 0 do
   begin
     Answer := MsgBox(
-      'Виявлено запущений Microsoft Word. Будь ласка, закрийте всі вікна Word, ' +
-      'щоб продовжити встановлення MD-Word, і натисніть "Повторити".',
+      'Microsoft Word is currently running. Please close all Word windows ' +
+      'to continue installing MD-Word, then click "Retry".',
       mbError, MB_RETRYCANCEL);
     if Answer = IDCANCEL then
     begin
@@ -234,8 +236,8 @@ begin
   while FindWindowByClassName('OpusApp') <> 0 do
   begin
     Answer := MsgBox(
-      'Виявлено запущений Microsoft Word. Будь ласка, закрийте всі вікна Word, ' +
-      'щоб продовжити видалення MD-Word, і натисніть "Повторити".',
+      'Microsoft Word is currently running. Please close all Word windows ' +
+      'to continue removing MD-Word, then click "Retry".',
       mbError, MB_RETRYCANCEL);
     if Answer = IDCANCEL then
     begin

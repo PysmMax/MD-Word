@@ -7,8 +7,8 @@ namespace MdWord.AddIn;
 /// Manual <c>ComImport</c> declarations for the three stable Office ABI
 /// interfaces this add-in needs (shared-add-in extensibility + RibbonX),
 /// instead of referencing the <c>Extensibility</c>/<c>Microsoft.Office.Core</c>
-/// PIAs — three fixed GUIDs, zero extra assembly dependencies (PLAN.md Phase 3
-/// "Технології"). These GUIDs are the well-known, stable Office values (not
+/// PIAs — three fixed GUIDs, zero extra assembly dependencies (initial plan,
+/// Phase 3 "Technology choice"). These GUIDs are the well-known, stable Office values (not
 /// re-derivable from the canonical MS Learn "customize the ribbon by using a
 /// managed COM add-in" walkthrough fetched for this phase's Step 0 — that
 /// article uses the typed <c>Extensibility</c> PIA reference rather than raw

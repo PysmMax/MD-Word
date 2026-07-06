@@ -9,7 +9,7 @@ namespace MdWord.Core.MdToOoxml;
 /// reference <see cref="BulletNumId"/>/<see cref="OrderedNumId"/> via
 /// <c>numPr</c>/<c>ilvl</c> (see <see cref="BlockWalker"/>).
 ///
-/// Known Phase 1 limitation (accepted per PLAN.md §Phase 1, which specifies
+/// Known Phase 1 limitation (accepted per the initial plan, Phase 1, which specifies
 /// exactly two abstractNum definitions, not one per list instance): every
 /// ordered list in a document shares the single <see cref="OrderedNumId"/>
 /// <c>num</c> instance, so if a document has two *separate* top-level

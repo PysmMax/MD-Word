@@ -40,12 +40,12 @@ public class RoundTripTests
     {
         var markdown = RoundTrip();
 
-        Assert.Contains("# Заголовок H1", markdown);
-        Assert.Contains("## Заголовок H2", markdown);
-        Assert.Contains("### Заголовок H3", markdown);
-        Assert.Contains("#### Заголовок H4", markdown);
-        Assert.Contains("##### Заголовок H5", markdown);
-        Assert.Contains("###### Заголовок H6", markdown);
+        Assert.Contains("# Heading H1", markdown);
+        Assert.Contains("## Heading H2", markdown);
+        Assert.Contains("### Heading H3", markdown);
+        Assert.Contains("#### Heading H4", markdown);
+        Assert.Contains("##### Heading H5", markdown);
+        Assert.Contains("###### Heading H6", markdown);
     }
 
     [Fact]
@@ -53,13 +53,13 @@ public class RoundTripTests
     {
         var markdown = RoundTrip();
 
-        Assert.Contains("Колонка A", markdown);
-        Assert.Contains("Колонка B", markdown);
-        Assert.Contains("Колонка C", markdown);
-        Assert.Contains("звичайний", markdown);
-        Assert.Contains("один", markdown);
-        Assert.Contains("два", markdown);
-        Assert.Contains("три", markdown);
+        Assert.Contains("Column A", markdown);
+        Assert.Contains("Column B", markdown);
+        Assert.Contains("Column C", markdown);
+        Assert.Contains("regular", markdown);
+        Assert.Contains("one", markdown);
+        Assert.Contains("two", markdown);
+        Assert.Contains("three", markdown);
     }
 
     [Fact]
@@ -67,15 +67,15 @@ public class RoundTripTests
     {
         var markdown = RoundTrip();
 
-        Assert.Contains("Пункт списку перший", markdown);
-        Assert.Contains("Пункт списку другий", markdown);
-        Assert.Contains("Пункт списку третій", markdown);
-        Assert.Contains("Вкладений впорядкований раз", markdown);
-        Assert.Contains("Вкладений впорядкований два", markdown);
-        Assert.Contains("Вкладений маркований усередині впорядкованого", markdown);
-        Assert.Contains("Впорядкований пункт перший", markdown);
-        Assert.Contains("Впорядкований пункт другий", markdown);
-        Assert.Contains("Впорядкований пункт третій", markdown);
+        Assert.Contains("First list item", markdown);
+        Assert.Contains("Second list item", markdown);
+        Assert.Contains("Third list item", markdown);
+        Assert.Contains("Nested ordered one", markdown);
+        Assert.Contains("Nested ordered two", markdown);
+        Assert.Contains("Nested bullet inside the ordered list", markdown);
+        Assert.Contains("First ordered item", markdown);
+        Assert.Contains("Second ordered item", markdown);
+        Assert.Contains("Third ordered item", markdown);
     }
 
     [Fact]
@@ -86,7 +86,7 @@ public class RoundTripTests
         Assert.Contains("line one of code", markdown);
         Assert.Contains("line two of code", markdown);
         Assert.Contains("indented code line", markdown);
-        Assert.Contains("інлайн-кодом", markdown);
+        Assert.Contains("inline code", markdown);
     }
 
     [Fact]
@@ -94,8 +94,8 @@ public class RoundTripTests
     {
         var markdown = RoundTrip();
 
-        Assert.Contains("Цитата з", markdown);
-        Assert.Contains("Другий абзац цитати", markdown);
+        Assert.Contains("A quote with", markdown);
+        Assert.Contains("Second paragraph of the quote", markdown);
     }
 
     [Fact]
@@ -116,11 +116,11 @@ public class RoundTripTests
         // LaTeX-string-equality assertion (mmltex may legitimately reformat
         // e.g. \dfrac vs \frac without being wrong).
         var inlineMatch = Regex.Match(markdown, @"\$([^$\n]+)\$");
-        Assert.True(inlineMatch.Success, "Очікувалась інлайн-формула $...$ у результаті.");
+        Assert.True(inlineMatch.Success, "Expected an inline $...$ formula in the result.");
         Assert.False(string.IsNullOrWhiteSpace(inlineMatch.Groups[1].Value));
 
         var displayMatch = Regex.Match(markdown, @"\$\$\s*([\s\S]+?)\s*\$\$");
-        Assert.True(displayMatch.Success, "Очікувалась блок-формула $$...$$ у результаті.");
+        Assert.True(displayMatch.Success, "Expected a display $$...$$ formula in the result.");
         Assert.False(string.IsNullOrWhiteSpace(displayMatch.Groups[1].Value));
     }
 

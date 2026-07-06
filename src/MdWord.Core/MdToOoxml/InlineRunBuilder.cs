@@ -71,7 +71,7 @@ internal static class InlineRunBuilder
                     // A literal <br> is the convention our own copy path emits for
                     // a line break inside a table cell — turn it back into a real
                     // Word break. All other raw HTML still degrades to its literal
-                    // source text (PLAN.md §Phase 1: "HtmlInline/HtmlBlock → literal").
+                    // source text (the initial plan, Phase 1: "HtmlInline/HtmlBlock → literal").
                     if (IsLineBreakTag(html.Tag))
                     {
                         result.Add(BuildBreakRun(format));
@@ -94,7 +94,7 @@ internal static class InlineRunBuilder
                     // Image embedding is not supported -- degrade to the alt text
                     // plus a warning so content is never silently lost.
                     result.Add(BuildRun(GetPlainText(image), format));
-                    mathContext?.Warnings.Add($"Зображення '{image.Url}' пропущено — вставлено лише підпис.");
+                    mathContext?.Warnings.Add($"Image '{image.Url}' skipped — inserted the caption only.");
                     break;
                 case LinkInline link:
                     result.Add(BuildHyperlink(link, format, mainPart, mathContext));
@@ -135,7 +135,7 @@ internal static class InlineRunBuilder
                 return new MathOfficeMath(ommlOuterXml);
             }
 
-            mathContext.Warnings.Add($"Формулу `{tex}` вставлено як текст: {failureReason}");
+            mathContext.Warnings.Add($"Formula `{tex}` inserted as text: {failureReason}");
         }
 
         // No xslPaths (or conversion failed for this one formula): degrade to
@@ -219,7 +219,7 @@ internal static class InlineRunBuilder
         if (mainPart != null)
         {
             // A malformed destination (Markdig's <...> form allows spaces) must
-            // degrade this one link, not abort the whole document (PLAN.md §6).
+            // degrade this one link, not abort the whole document (the initial plan §6).
             if (System.Uri.TryCreate(link.Url ?? string.Empty, System.UriKind.RelativeOrAbsolute, out var uri))
             {
                 if (uri.IsAbsoluteUri && !IsAllowedScheme(uri.Scheme))
@@ -227,7 +227,7 @@ internal static class InlineRunBuilder
                     // SEC-02: only http(s)/mailto destinations get a live hyperlink --
                     // anything else (file://, javascript:, custom schemes, ...) degrades
                     // to plain text plus a warning rather than a silently created link.
-                    mathContext?.Warnings.Add($"Посилання зі схемою '{uri.Scheme}' пропущено — вставлено лише текст ('{link.Url}').");
+                    mathContext?.Warnings.Add($"A link with scheme '{uri.Scheme}' skipped — inserted the text only ('{link.Url}').");
                 }
                 else
                 {
@@ -237,7 +237,7 @@ internal static class InlineRunBuilder
             }
             else
             {
-                mathContext?.Warnings.Add($"Посилання з некоректною адресою '{link.Url}' вставлено без гіперлінку.");
+                mathContext?.Warnings.Add($"A link with an invalid address '{link.Url}' inserted without a hyperlink.");
             }
         }
 
@@ -259,7 +259,7 @@ internal static class InlineRunBuilder
             {
                 if (uri.IsAbsoluteUri && !IsAllowedScheme(uri.Scheme))
                 {
-                    mathContext?.Warnings.Add($"Посилання зі схемою '{uri.Scheme}' пропущено — вставлено лише текст ('{autolink.Url}').");
+                    mathContext?.Warnings.Add($"A link with scheme '{uri.Scheme}' skipped — inserted the text only ('{autolink.Url}').");
                 }
                 else
                 {

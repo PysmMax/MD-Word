@@ -44,7 +44,7 @@ public sealed class MarkdownResult
 
 /// <summary>
 /// Public facade of MdWord.Core: Markdig ⇄ WordprocessingML conversion,
-/// independent of Word. See PLAN.md §6 for the full core contract.
+/// independent of Word. See the initial plan §6 for the full core contract.
 /// </summary>
 public sealed class MarkdownConverter
 {
@@ -74,12 +74,12 @@ public sealed class MarkdownConverter
     {
         if (markdown == null)
         {
-            throw new ConvertException("Вхідний Markdown-текст не може бути null.");
+            throw new ConvertException("Input Markdown text cannot be null.");
         }
 
         // AI tools often emit \(...\)/\[...\] instead of $...$/$$...$$; rewrite
         // before parsing so Markdig's mathematics extension actually sees math
-        // nodes (PLAN.md Phase 2). Line-oriented, skips fenced code blocks.
+        // nodes (the initial plan, Phase 2). Line-oriented, skips fenced code blocks.
         var preprocessed = Math.LatexDelimiterPreprocessor.Rewrite(markdown);
 
         Markdig.Syntax.MarkdownDocument document;
@@ -89,7 +89,7 @@ public sealed class MarkdownConverter
         }
         catch (Exception ex)
         {
-            throw new ConvertException("Не вдалося розпарсити Markdown.", ex);
+            throw new ConvertException("Could not parse the Markdown.", ex);
         }
 
         byte[] docxBytes;
@@ -101,7 +101,7 @@ public sealed class MarkdownConverter
         }
         catch (Exception ex)
         {
-            throw new ConvertException("Не вдалося згенерувати документ Word.", ex);
+            throw new ConvertException("Could not generate the Word document.", ex);
         }
 
         return new OoxmlResult
@@ -121,7 +121,7 @@ public sealed class MarkdownConverter
     {
         if (flatOpcXml == null)
         {
-            throw new ConvertException("Вхідний Flat OPC XML не може бути null.");
+            throw new ConvertException("Input Flat OPC XML cannot be null.");
         }
 
         WordprocessingDocument document;
@@ -131,7 +131,7 @@ public sealed class MarkdownConverter
         }
         catch (Exception ex)
         {
-            throw new ConvertException("Не вдалося розпарсити Flat OPC XML.", ex);
+            throw new ConvertException("Could not parse the Flat OPC XML.", ex);
         }
 
         using (document)
@@ -144,7 +144,7 @@ public sealed class MarkdownConverter
             }
             catch (Exception ex)
             {
-                throw new ConvertException("Не вдалося конвертувати документ Word у Markdown.", ex);
+                throw new ConvertException("Could not convert the Word document to Markdown.", ex);
             }
 
             return new MarkdownResult { Markdown = markdown, Warnings = warnings };

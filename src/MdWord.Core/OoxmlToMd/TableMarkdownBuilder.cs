@@ -14,7 +14,7 @@ namespace MdWord.Core.OoxmlToMd;
 /// <c>samples/demo.md</c> itself is shaped.
 ///
 /// <c>gridSpan</c>/<c>vMerge</c> can't be expressed in a pipe table (per
-/// PLAN.md) — both degrade to an empty cell in that grid position plus a
+/// the initial plan) — both degrade to an empty cell in that grid position plus a
 /// <see cref="MdConversionContext.Warnings"/> entry, rather than attempting
 /// merge-aware reconstruction.
 /// </summary>
@@ -84,7 +84,7 @@ internal static class TableMarkdownBuilder
 
             if (IsVerticalMergeContinuation(cell))
             {
-                context.Warnings.Add("Клітинку, об'єднану по вертикалі (vMerge), втрачено — вставлено порожню клітинку.");
+                context.Warnings.Add("A vertically merged cell (vMerge) was lost — inserted an empty cell.");
                 for (var i = 0; i < gridSpan; i++)
                 {
                     result.Add(string.Empty);
@@ -97,7 +97,7 @@ internal static class TableMarkdownBuilder
 
             if (gridSpan > 1)
             {
-                context.Warnings.Add($"Клітинку, об'єднану по горизонталі (gridSpan={gridSpan}), втрачено — додано порожні клітинки.");
+                context.Warnings.Add($"A horizontally merged cell (gridSpan={gridSpan}) was lost — added empty cells.");
                 for (var i = 1; i < gridSpan; i++)
                 {
                     result.Add(string.Empty);

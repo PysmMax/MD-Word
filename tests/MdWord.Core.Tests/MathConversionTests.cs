@@ -303,7 +303,7 @@ public class MathConversionTests
         var parenMath = parenBody.Descendants<OMath.OfficeMath>().Single();
         Assert.Equal(dollarMath.OuterXml, parenMath.OuterXml);
 
-        // The preprocessor is deliberately line-oriented (PLAN.md Phase 2 task
+        // The preprocessor is deliberately line-oriented (the initial plan, Phase 2 task
         // list) -- \[...\] only rewrites within a single line, so this checks
         // the single-line form; both "$$E=mc^2$$" and its rewritten
         // "\[E=mc^2\]" source parse as inline display math (see the

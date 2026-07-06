@@ -8,12 +8,12 @@ namespace MdWord.AddIn;
 
 /// <summary>
 /// COM entry point for the add-in. Registered under the fixed
-/// <c>CLSID_Connect</c> (see docs/IDS.md — also baked into the future
-/// installer, Phase 5).
+/// <c>CLSID_Connect</c> (also baked into installer/MdWord.iss's
+/// [Registry] section).
 /// </summary>
 /// <remarks>
 /// <para>
-/// <b>Deviation from PLAN.md's literal Phase 3 snippet:</b> the plan's
+/// <b>Deviation from the initial plan's literal Phase 3 snippet:</b> the plan's
 /// Connect.cs sketch used <see cref="ClassInterfaceType.None"/>. That would
 /// break this add-in's two actual COM entry paths: Word's RibbonX engine
 /// resolves <c>onAction="OnPasteMarkdown"</c> by calling
@@ -164,7 +164,7 @@ public class Connect : IDTExtensibility2, IRibbonExtensibility
 
     public void OnStartupComplete(ref Array custom)
     {
-        // PLAN.md Phase 6: pre-warm the KaTeX/Jint engine in the background so
+        // Per the initial plan, Phase 6: pre-warm the KaTeX/Jint engine in the background so
         // the first formula paste doesn't pay the ~1s bundle-parse cost on the
         // UI thread. WordActions catches everything internally.
         System.Threading.Tasks.Task.Run((Action)WordActions.WarmUpMathEngine);
@@ -187,7 +187,7 @@ public class Connect : IDTExtensibility2, IRibbonExtensibility
         }
     }
 
-    /// <summary>Ribbon-click entry point for the "Вставити Markdown" button.</summary>
+    /// <summary>Ribbon-click entry point for the "Insert Markdown" button.</summary>
     public void OnPasteMarkdown(IRibbonControl control)
     {
         try
@@ -200,7 +200,7 @@ public class Connect : IDTExtensibility2, IRibbonExtensibility
         }
     }
 
-    /// <summary>Ribbon-click entry point for the "Копіювати Markdown" button.</summary>
+    /// <summary>Ribbon-click entry point for the "Copy as Markdown" button.</summary>
     public void OnCopyMarkdown(IRibbonControl control)
     {
         try
@@ -272,7 +272,7 @@ public class Connect : IDTExtensibility2, IRibbonExtensibility
 
         if (resourceName == null)
         {
-            throw new InvalidOperationException("Embedded resource 'Ribbon.xml' не знайдено в збірці MdWord.AddIn.");
+            throw new InvalidOperationException("Embedded resource 'Ribbon.xml' was not found in the MdWord.AddIn assembly.");
         }
 
         using (var stream = assembly.GetManifestResourceStream(resourceName))
@@ -283,7 +283,7 @@ public class Connect : IDTExtensibility2, IRibbonExtensibility
     }
 
     /// <summary>
-    /// The non-negotiable rule (PLAN.md, verbatim): every COM callback must
+    /// The non-negotiable rule (initial plan, verbatim): every COM callback must
     /// log and show a human-readable MessageBox rather than let an exception
     /// escape — an escaped exception is what flips <c>LoadBehavior</c> from
     /// 3 to 2 and disables the add-in.
@@ -292,8 +292,8 @@ public class Connect : IDTExtensibility2, IRibbonExtensibility
     {
         Logger.LogError(context, exception);
         MessageBox.Show(
-            $"MD-Word: помилка в '{context}'.\n{exception.Message}\n\nЛог: {Logger.LogPath}",
-            "MD-Word — помилка",
+            $"MD-Word: an error occurred in '{context}'.\n{exception.Message}\n\nLog: {Logger.LogPath}",
+            "MD-Word — error",
             MessageBoxButtons.OK,
             MessageBoxIcon.Error);
     }

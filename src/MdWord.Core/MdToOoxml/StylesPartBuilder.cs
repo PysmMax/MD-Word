@@ -10,7 +10,7 @@ namespace MdWord.Core.MdToOoxml;
 /// such as "Заголовок 1") determine the final appearance when this content
 /// is inserted elsewhere. The two code styles are the deliberate exception:
 /// Word has no built-in "code" look to inherit, so CodeBlock/CodeInline bake
-/// in the monospace font + light shading themselves (per PLAN.md/the 1b
+/// in the monospace font + light shading themselves (per the initial plan / the 1b
 /// brief — formatting only where functionally required).
 /// </summary>
 internal static class StylesPartBuilder

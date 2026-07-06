@@ -1,6 +1,6 @@
 ﻿<#
 .SYNOPSIS
-    Builds MD-Word-Setup-<version>.exe (Фаза 5, PLAN.md): dotnet publish the
+    Builds MD-Word-Setup-<version>.exe: dotnet publish the
     add-in's full dependency closure, then compile installer\MdWord.iss with
     Inno Setup 6's ISCC.exe.
 
@@ -17,7 +17,7 @@
        Markdig.dll, Jint.dll + its own deps, DocumentFormat.OpenXml*.dll,
        System.IO.Packaging.dll, ...). katex.min.js and the mmltex .xsl
        files are EmbeddedResources compiled into MdWord.Core.dll itself
-       (docs/IDS.md) — they are NOT expected as loose files in out\publish.
+       (see THIRD-PARTY-NOTICES.md) — they are NOT expected as loose files in out\publish.
     4. Locates ISCC.exe (Inno Setup 6's command-line compiler). Inspecting
        Inno Setup's own installer script (jrsoftware/ispack's setup.iss)
        shows it does NOT register an "App Paths" registry entry for
@@ -26,15 +26,15 @@
        in case a future Inno Setup version or install method adds it), the
        Inno Setup "Uninstall" registry key's InstallLocation value, and
        finally the well-known default Program Files locations. If none
-       resolve, throws a clear Ukrainian error pointing at
+       resolve, throws a clear error pointing at
        `winget install -e --id JRSoftware.InnoSetup`.
     5. Runs: ISCC.exe installer\MdWord.iss /DAppVersion=<version from step 1>
        Output: out\MD-Word-Setup-<version>.exe (per MdWord.iss's
        OutputDir/OutputBaseFilename).
 
-    NOT executed by the authoring session (Фаза 5 subagent scope stops at
+    NOT executed by the authoring session (the authoring scope stops at
     "script is written and correct" — same convention as
-    tools\register-dev.ps1 in Фаза 3). Run this yourself once Inno Setup 6
+    tools\register-dev.ps1). Run this yourself once Inno Setup 6
     is installed.
 #>
 
@@ -49,43 +49,43 @@ $issPath = Join-Path $PSScriptRoot 'MdWord.iss'
 $publishDir = Join-Path $repoRoot 'out\publish'
 
 if (-not (Test-Path -LiteralPath $propsPath)) {
-    throw "Не знайдено $propsPath."
+    throw "Not found: $propsPath."
 }
 if (-not (Test-Path -LiteralPath $issPath)) {
-    throw "Не знайдено $issPath."
+    throw "Not found: $issPath."
 }
 
-# --- 1. Версія з Directory.Build.props --------------------------------------
+# --- 1. Version from Directory.Build.props -----------------------------------
 [xml]$props = Get-Content -LiteralPath $propsPath
 $versionNode = $props.Project.PropertyGroup.Version | Where-Object { $_ } | Select-Object -First 1
 if (-not $versionNode) {
-    throw "Не вдалося прочитати <Version> з $propsPath."
+    throw "Could not read <Version> from $propsPath."
 }
 $version = $versionNode.ToString().Trim()
-Write-Host "Версія (Directory.Build.props): $version" -ForegroundColor Cyan
+Write-Host "Version (Directory.Build.props): $version" -ForegroundColor Cyan
 
-# --- 2 і 3. dotnet publish ----------------------------------------------------
+# --- 2 & 3. dotnet publish ----------------------------------------------------
 if (Test-Path -LiteralPath $publishDir) {
-    Write-Host "Видаляю застарілий $publishDir перед publish..." -ForegroundColor DarkGray
+    Write-Host "Removing stale $publishDir before publish..." -ForegroundColor DarkGray
     Remove-Item -LiteralPath $publishDir -Recurse -Force
 }
 
 Write-Host "dotnet publish src\MdWord.AddIn -c Release -o out\publish ..." -ForegroundColor Cyan
 & dotnet publish (Join-Path $repoRoot 'src\MdWord.AddIn') -c Release -o $publishDir
 if ($LASTEXITCODE -ne 0) {
-    throw "dotnet publish завершився з кодом $LASTEXITCODE."
+    throw "dotnet publish exited with code $LASTEXITCODE."
 }
 
-# --- 4. Пошук ISCC.exe ---------------------------------------------------------
+# --- 4. Locate ISCC.exe --------------------------------------------------------
 function Find-Iscc {
     # a) PATH
     $cmd = Get-Command 'ISCC.exe' -ErrorAction SilentlyContinue
     if ($cmd) { return $cmd.Source }
 
-    # b) "App Paths" (обидва реєстрові view) — не підтверджено, що Inno Setup
-    #    сам реєструє цей ключ (перевірено на офіційному setup.iss з
-    #    jrsoftware/ispack — там такого [Registry]-запису немає), тож це
-    #    лише дешева додаткова перевірка про всяк випадок.
+    # b) "App Paths" (both registry views) — it is NOT confirmed that Inno Setup
+    #    registers this key itself (checked against the official setup.iss in
+    #    jrsoftware/ispack — no such [Registry] entry there), so this is just a
+    #    cheap extra probe, in case.
     $appPathsKeys = @(
         'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\ISCC.exe',
         'HKLM:\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\App Paths\ISCC.exe',
@@ -98,7 +98,7 @@ function Find-Iscc {
         }
     }
 
-    # c) Власний ключ деінсталяції Inno Setup -> InstallLocation
+    # c) Inno Setup's own uninstall key -> InstallLocation
     $uninstallKeys = @(
         'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Inno Setup 6_is1',
         'HKLM:\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Inno Setup 6_is1',
@@ -114,9 +114,9 @@ function Find-Iscc {
         }
     }
 
-    # d) Типові розташування за замовчуванням. ProgramFiles(x86) не існує на
-    #    32-бітній Windows — Join-Path на $null падає ще до перевірки нижче,
-    #    тож будуємо список лише з тих коренів, які справді є.
+    # d) Well-known default locations. ProgramFiles(x86) does not exist on
+    #    32-bit Windows — Join-Path on $null throws before the check below,
+    #    so build the list only from the roots that actually exist.
     $defaultRoots = @(${env:ProgramFiles(x86)}, $env:ProgramFiles) | Where-Object { $_ }
     $defaultCandidates = $defaultRoots | ForEach-Object { Join-Path $_ 'Inno Setup 6\ISCC.exe' }
     foreach ($candidate in $defaultCandidates) {
@@ -128,21 +128,21 @@ function Find-Iscc {
 
 $iscc = Find-Iscc
 if (-not $iscc) {
-    throw ("Не знайдено ISCC.exe (компілятор Inno Setup 6). Встановіть Inno Setup: " +
-           "winget install -e --id JRSoftware.InnoSetup, потім повторіть запуск цього скрипта.")
+    throw ("ISCC.exe (the Inno Setup 6 compiler) was not found. Install Inno Setup: " +
+           "winget install -e --id JRSoftware.InnoSetup, then re-run this script.")
 }
 Write-Host "ISCC.exe: $iscc" -ForegroundColor Cyan
 
-# --- 5. Компіляція інсталятора -------------------------------------------------
+# --- 5. Compile the installer ---------------------------------------------------
 Write-Host "ISCC.exe `"$issPath`" /DAppVersion=$version ..." -ForegroundColor Cyan
 & $iscc $issPath "/DAppVersion=$version"
 if ($LASTEXITCODE -ne 0) {
-    throw "ISCC.exe завершився з кодом $LASTEXITCODE."
+    throw "ISCC.exe exited with code $LASTEXITCODE."
 }
 
 $outputExe = Join-Path $repoRoot "out\MD-Word-Setup-$version.exe"
 if (Test-Path -LiteralPath $outputExe) {
-    Write-Host "Готово: $outputExe" -ForegroundColor Green
+    Write-Host "Done: $outputExe" -ForegroundColor Green
 } else {
-    Write-Warning "ISCC.exe завершився успішно, але очікуваний файл $outputExe не знайдено — перевірте OutputDir/OutputBaseFilename у MdWord.iss."
+    Write-Warning "ISCC.exe succeeded but the expected file $outputExe was not found — check OutputDir/OutputBaseFilename in MdWord.iss."
 }
