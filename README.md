@@ -1,9 +1,12 @@
 # MD-Word
 
+[![CI](https://github.com/PysmMax/MD-Word/actions/workflows/ci.yml/badge.svg)](https://github.com/PysmMax/MD-Word/actions/workflows/ci.yml)
+
 An add-in for Microsoft Word that adds a **Markdown** group to the Home tab
 with two buttons: **Insert Markdown** (converts the clipboard's Markdown
 text into native, fully editable Word content — headings, lists, tables,
-bold/italic, code, links, LaTeX formulas as Word equations) and
+bold/italic, subscript/superscript, highlight, underline, code, links,
+LaTeX formulas as Word equations) and
 **Copy as Markdown** (the reverse conversion — turns the selected Word
 fragment back into Markdown).
 

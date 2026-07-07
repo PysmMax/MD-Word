@@ -20,6 +20,7 @@ namespace MdWord.Core.Tests;
 /// single-line "$$E=mc^2$$" parses as inline display math instead, same as
 /// BlockMappingTests' existing convention ("$$\nE=mc^2\n$$").
 /// </summary>
+[Trait("Category", "RequiresOfficeXsl")]
 public class MathConversionTests
 {
     private static readonly MathXslPaths XslPaths = OfficeXslLocator.Resolve();

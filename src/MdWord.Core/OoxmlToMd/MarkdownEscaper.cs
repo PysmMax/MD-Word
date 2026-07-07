@@ -22,7 +22,16 @@ internal static class MarkdownEscaper
     private static readonly Regex LeadingDash = new(@"^-(\s|$)", RegexOptions.Compiled);
     private static readonly Regex LeadingOrdered = new(@"^(\d+)\.(\s|$)", RegexOptions.Compiled);
 
-    /// <summary>Backslash-escapes <c>* _ # | \ `</c> wherever they occur.</summary>
+    /// <summary>
+    /// Backslash-escapes <c>* _ # | \ ` ~ ^</c> wherever they occur, and
+    /// <c>+</c>/<c>=</c> only when doubled. Since v1.0.2 the parser has all
+    /// EmphasisExtras enabled: a PAIR of single <c>~</c>/<c>^</c> anywhere
+    /// in a paragraph becomes sub/superscript (verified: "~10 to 20~" parses
+    /// as subscript), so both are escaped unconditionally; <c>++</c>/<c>==</c>
+    /// only open inserted/marked spans as adjacent pairs, and a lone
+    /// <c>+</c>/<c>=</c> is common prose ("a = b + c") — escape each
+    /// character that has an identical neighbor, leave singles alone.
+    /// </summary>
     public static string EscapeInlineText(string text)
     {
         if (string.IsNullOrEmpty(text))
@@ -31,8 +40,9 @@ internal static class MarkdownEscaper
         }
 
         var builder = new StringBuilder(text.Length);
-        foreach (var ch in text)
+        for (var i = 0; i < text.Length; i++)
         {
+            var ch = text[i];
             switch (ch)
             {
                 case '\\':
@@ -41,7 +51,21 @@ internal static class MarkdownEscaper
                 case '#':
                 case '|':
                 case '`':
+                case '~':
+                case '^':
                     builder.Append('\\');
+                    builder.Append(ch);
+                    break;
+                case '+':
+                case '=':
+                    var hasSameNeighbor =
+                        (i + 1 < text.Length && text[i + 1] == ch)
+                        || (i > 0 && text[i - 1] == ch);
+                    if (hasSameNeighbor)
+                    {
+                        builder.Append('\\');
+                    }
+
                     builder.Append(ch);
                     break;
                 default:

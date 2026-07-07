@@ -1,0 +1,24 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+jobs:
+  build-and-test:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # net48 builds on a bare runner because the repo already uses
+      # Microsoft.NETFramework.ReferenceAssemblies. -warnaserror turns the
+      # project's "0 warnings" invariant into a hard gate.
+      - name: Build
+        run: dotnet build MdWord.sln -c Release -warnaserror
+
+      # The RequiresOfficeXsl classes need MML2OMML.XSL/OMML2MML.XSL from a
+      # real Office install, which GitHub runners do not have — they run
+      # locally instead (see tests/MdWord.Core.Tests/OfficeXslLocator.cs).
+      - name: Test
+        run: dotnet test MdWord.sln -c Release --no-build --filter "Category!=RequiresOfficeXsl"

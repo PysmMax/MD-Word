@@ -51,25 +51,36 @@ public class RegressionTests
         Assert.NotEmpty(warnings);
     }
 
-    [Fact] // REL-04
-    public void SingleTildeSubscript_StaysLiteralText_NotStrikethrough()
+    // v1.0.2 intentionally reverses the REL-04 literal-text degradation:
+    // EmphasisExtras.Default is now enabled, so these delimiters map to real
+    // OOXML formatting instead of being left as literal source text.
+    [Fact]
+    public void SingleTildeSubscript_MapsToSubscript_NotStrikethrough()
     {
         var (body, _) = GetBodyAndWarnings("H~2~O");
 
         var paragraph = body.Elements<Paragraph>().Single();
-        Assert.Equal("H~2~O", paragraph.InnerText);
+        Assert.Equal("H2O", paragraph.InnerText);
         Assert.Empty(paragraph.Descendants<Strike>());
+        // Single tilde is subscript, not strikethrough
+        var subscriptRun = paragraph.Elements<Run>().Single(r => r.InnerText == "2");
+        Assert.NotNull(subscriptRun.RunProperties?.VerticalTextAlignment);
     }
 
-    [Fact] // REL-04
-    public void CaretSuperscriptAndMarkedText_StayLiteralText()
+    [Fact]
+    public void CaretSuperscriptAndMarkedText_MapToSuperscriptAndHighlight()
     {
         var (body, _) = GetBodyAndWarnings("x^2^ and ==marked==");
 
         var paragraph = body.Elements<Paragraph>().Single();
-        Assert.Equal("x^2^ and ==marked==", paragraph.InnerText);
+        Assert.Equal("x2 and marked", paragraph.InnerText);
         Assert.Empty(paragraph.Descendants<Italic>());
         Assert.Empty(paragraph.Descendants<Bold>());
+        // Caret is superscript and equals is highlight, not italic/bold
+        var superscriptRun = paragraph.Elements<Run>().Single(r => r.InnerText == "2");
+        Assert.NotNull(superscriptRun.RunProperties?.VerticalTextAlignment);
+        var markedRun = paragraph.Elements<Run>().Single(r => r.InnerText == "marked");
+        Assert.NotNull(markedRun.RunProperties?.Highlight);
     }
 
     [Fact] // REL-06

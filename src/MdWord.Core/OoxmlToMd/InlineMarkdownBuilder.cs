@@ -29,17 +29,31 @@ internal static class InlineMarkdownBuilder
         public readonly bool Bold;
         public readonly bool Italic;
         public readonly bool Strike;
+        public readonly bool Subscript;
+        public readonly bool Superscript;
+        public readonly bool Highlight;
+        public readonly bool Underline;
 
-        public Format(bool bold, bool italic, bool strike)
+        public Format(bool bold, bool italic, bool strike, bool subscript, bool superscript, bool highlight, bool underline)
         {
             Bold = bold;
             Italic = italic;
             Strike = strike;
+            Subscript = subscript;
+            Superscript = superscript;
+            Highlight = highlight;
+            Underline = underline;
         }
 
-        public bool Equals(Format other) => Bold == other.Bold && Italic == other.Italic && Strike == other.Strike;
+        public bool Equals(Format other) =>
+            Bold == other.Bold && Italic == other.Italic && Strike == other.Strike
+            && Subscript == other.Subscript && Superscript == other.Superscript
+            && Highlight == other.Highlight && Underline == other.Underline;
+
         public override bool Equals(object obj) => obj is Format other && Equals(other);
-        public override int GetHashCode() => (Bold, Italic, Strike).GetHashCode();
+
+        public override int GetHashCode() =>
+            (Bold, Italic, Strike, Subscript, Superscript, Highlight, Underline).GetHashCode();
     }
 
     private enum AtomKind
@@ -284,7 +298,8 @@ internal static class InlineMarkdownBuilder
 
     private static string ApplyFormat(string text, Format format)
     {
-        if (!format.Bold && !format.Italic && !format.Strike)
+        if (!format.Bold && !format.Italic && !format.Strike
+            && !format.Subscript && !format.Superscript && !format.Highlight && !format.Underline)
         {
             return text;
         }
@@ -315,9 +330,33 @@ internal static class InlineMarkdownBuilder
             result = "*" + result + "*";
         }
 
+        // Sub/superscript go inside strike so the tilde markers never sit
+        // adjacent to '~~' when only one of the two is present. When BOTH
+        // strike and subscript apply, emit only strike: '~~~x~~~' does not
+        // parse at all in Markdig (verified empirically) — a dead literal
+        // string would be worse than dropping the rarer property.
+        if (format.Superscript)
+        {
+            result = "^" + result + "^";
+        }
+        else if (format.Subscript && !format.Strike)
+        {
+            result = "~" + result + "~";
+        }
+
         if (format.Strike)
         {
             result = "~~" + result + "~~";
+        }
+
+        if (format.Underline)
+        {
+            result = "++" + result + "++";
+        }
+
+        if (format.Highlight)
+        {
+            result = "==" + result + "==";
         }
 
         return leading + result + trailing;
@@ -383,9 +422,17 @@ internal static class InlineMarkdownBuilder
             return default;
         }
 
+        var vertAlign = runProperties.VerticalTextAlignment?.Val;
+        var highlight = runProperties.Highlight?.Val;
+        var underline = runProperties.Underline?.Val;
+
         return new Format(
             runProperties.Bold != null && runProperties.Bold.Val?.Value != false,
             runProperties.Italic != null && runProperties.Italic.Val?.Value != false,
-            runProperties.Strike != null && runProperties.Strike.Val?.Value != false);
+            runProperties.Strike != null && runProperties.Strike.Val?.Value != false,
+            vertAlign != null && vertAlign.Value == VerticalPositionValues.Subscript,
+            vertAlign != null && vertAlign.Value == VerticalPositionValues.Superscript,
+            highlight != null && highlight.Value != HighlightColorValues.None,
+            underline != null && underline.Value != UnderlineValues.None);
     }
 }

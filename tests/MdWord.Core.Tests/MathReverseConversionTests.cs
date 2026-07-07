@@ -24,6 +24,7 @@ namespace MdWord.Core.Tests;
 /// command/structure, not exact string equality (a LaTeX→OMML→MathML→LaTeX
 /// chain can legitimately reformat a formula, e.g. \dfrac vs \frac).
 /// </summary>
+[Trait("Category", "RequiresOfficeXsl")]
 public class MathReverseConversionTests
 {
     private static readonly MathXslPaths XslPaths = OfficeXslLocator.Resolve();
@@ -125,7 +126,7 @@ public class MathReverseConversionTests
         // literal "$x^2$" text; reading it back should just pass that
         // literal text through unchanged, no warning.
         var reverseFromLiteral = new MarkdownConverter(null).ToMarkdown(forward.FlatOpc);
-        Assert.Contains("$x^2$", reverseFromLiteral.Markdown);
+        Assert.Contains("$x\\^2$", reverseFromLiteral.Markdown);
     }
 
     [Fact]

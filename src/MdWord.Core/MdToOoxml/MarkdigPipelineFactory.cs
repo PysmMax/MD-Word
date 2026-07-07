@@ -15,11 +15,11 @@ internal static class MarkdigPipelineFactory
     {
         return new MarkdownPipelineBuilder()
             .UsePipeTables()
-            // Only strikethrough: the inline mapper has no OOXML mapping for
-            // subscript (~x~), superscript (^x^), inserted (++x++) or marked
-            // (==x==) -- with the default (all-on) options those silently came
-            // out as strike/italic/bold. Literal text is the honest degradation.
-            .UseEmphasisExtras(Markdig.Extensions.EmphasisExtras.EmphasisExtraOptions.Strikethrough)
+            // All extras: since v1.0.2 the inline mapper has real OOXML
+            // mappings for subscript (~x~ -> w:vertAlign), superscript
+            // (^x^ -> w:vertAlign), inserted (++x++ -> w:u) and marked
+            // (==x== -> w:highlight), alongside strikethrough (~~x~~).
+            .UseEmphasisExtras(Markdig.Extensions.EmphasisExtras.EmphasisExtraOptions.Default)
             .UseMathematics()
             .Build();
     }

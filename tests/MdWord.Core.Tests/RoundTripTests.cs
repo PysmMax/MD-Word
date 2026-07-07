@@ -20,6 +20,7 @@ namespace MdWord.Core.Tests;
 /// Math assertions stay loose per the brief: just that each formula
 /// survives with non-empty content, no LaTeX-string-equality assertions.
 /// </summary>
+[Trait("Category", "RequiresOfficeXsl")]
 public class RoundTripTests
 {
     private static readonly MathXslPaths XslPaths = OfficeXslLocator.Resolve();

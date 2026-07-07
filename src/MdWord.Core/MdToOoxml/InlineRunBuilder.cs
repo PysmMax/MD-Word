@@ -29,17 +29,29 @@ internal static class InlineRunBuilder
         public readonly bool Bold;
         public readonly bool Italic;
         public readonly bool Strike;
+        public readonly bool Subscript;
+        public readonly bool Superscript;
+        public readonly bool Highlight;
+        public readonly bool Underline;
 
-        public Format(bool bold, bool italic, bool strike)
+        private Format(bool bold, bool italic, bool strike, bool subscript, bool superscript, bool highlight, bool underline)
         {
             Bold = bold;
             Italic = italic;
             Strike = strike;
+            Subscript = subscript;
+            Superscript = superscript;
+            Highlight = highlight;
+            Underline = underline;
         }
 
-        public Format WithBold() => new(true, Italic, Strike);
-        public Format WithItalic() => new(Bold, true, Strike);
-        public Format WithStrike() => new(Bold, Italic, true);
+        public Format WithBold() => new(true, Italic, Strike, Subscript, Superscript, Highlight, Underline);
+        public Format WithItalic() => new(Bold, true, Strike, Subscript, Superscript, Highlight, Underline);
+        public Format WithStrike() => new(Bold, Italic, true, Subscript, Superscript, Highlight, Underline);
+        public Format WithSubscript() => new(Bold, Italic, Strike, true, Superscript, Highlight, Underline);
+        public Format WithSuperscript() => new(Bold, Italic, Strike, Subscript, true, Highlight, Underline);
+        public Format WithHighlight() => new(Bold, Italic, Strike, Subscript, Superscript, true, Underline);
+        public Format WithUnderline() => new(Bold, Italic, Strike, Subscript, Superscript, Highlight, true);
     }
 
     public static IEnumerable<OpenXmlElement> Build(ContainerInline container, MainDocumentPart mainPart = null, MathConversionContext mathContext = null)
@@ -145,9 +157,18 @@ internal static class InlineRunBuilder
 
     private static Format ApplyEmphasis(Format format, EmphasisInline emphasis)
     {
-        if (emphasis.DelimiterChar == '~')
+        switch (emphasis.DelimiterChar)
         {
-            return format.WithStrike();
+            case '~':
+                // Markdig EmphasisExtras share the tilde: '~~' (count 2) is
+                // strikethrough, a single '~' (count 1) is subscript.
+                return emphasis.DelimiterCount >= 2 ? format.WithStrike() : format.WithSubscript();
+            case '^':
+                return format.WithSuperscript();
+            case '=':
+                return format.WithHighlight();
+            case '+':
+                return format.WithUnderline();
         }
 
         return emphasis.DelimiterCount switch
@@ -297,6 +318,9 @@ internal static class InlineRunBuilder
 
     private static RunProperties BuildRunProperties(Format format)
     {
+        // Child order matters: CT_RPr is an xsd:sequence (…, b, i, …,
+        // strike, …, highlight, u, …, vertAlign, …) and OpenXmlValidator
+        // rejects out-of-order children — keep appends in schema order.
         var runProperties = new RunProperties();
         if (format.Bold)
         {
@@ -311,6 +335,25 @@ internal static class InlineRunBuilder
         if (format.Strike)
         {
             runProperties.Append(new Strike());
+        }
+
+        if (format.Highlight)
+        {
+            runProperties.Append(new Highlight { Val = HighlightColorValues.Yellow });
+        }
+
+        if (format.Underline)
+        {
+            runProperties.Append(new Underline { Val = UnderlineValues.Single });
+        }
+
+        if (format.Superscript)
+        {
+            runProperties.Append(new VerticalTextAlignment { Val = VerticalPositionValues.Superscript });
+        }
+        else if (format.Subscript)
+        {
+            runProperties.Append(new VerticalTextAlignment { Val = VerticalPositionValues.Subscript });
         }
 
         return runProperties;
