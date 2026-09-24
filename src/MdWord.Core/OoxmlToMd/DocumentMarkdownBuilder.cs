@@ -114,7 +114,7 @@ internal static class DocumentMarkdownBuilder
             if (headingLevel.HasValue)
             {
                 FlushAll();
-                var headingText = InlineMarkdownBuilder.BuildParagraphText(paragraph, _context);
+                var headingText = MarkdownEscaper.EscapeLeadingMarkers(InlineMarkdownBuilder.BuildParagraphText(paragraph, _context));
                 _blocks.Add(new string('#', headingLevel.Value) + " " + headingText);
                 return;
             }
@@ -125,7 +125,7 @@ internal static class DocumentMarkdownBuilder
             {
                 FlushList();
                 FlushQuote();
-                _codeLines.Add(InlineMarkdownBuilder.GetRawText(paragraph));
+                _codeLines.Add(InlineMarkdownBuilder.GetRawText(paragraph, _context));
                 return;
             }
 
@@ -133,7 +133,7 @@ internal static class DocumentMarkdownBuilder
             {
                 FlushList();
                 FlushQuote();
-                _codeLines.Add(InlineMarkdownBuilder.GetRawText(paragraph));
+                _codeLines.Add(InlineMarkdownBuilder.GetRawText(paragraph, _context));
                 return;
             }
 
@@ -141,7 +141,7 @@ internal static class DocumentMarkdownBuilder
             {
                 FlushList();
                 FlushCode();
-                var quoteText = InlineMarkdownBuilder.BuildParagraphText(paragraph, _context);
+                var quoteText = MarkdownEscaper.EscapeLeadingMarkers(InlineMarkdownBuilder.BuildParagraphText(paragraph, _context));
                 _quoteLines.Add("> " + quoteText);
                 return;
             }
@@ -164,7 +164,7 @@ internal static class DocumentMarkdownBuilder
 
                 var indent = new string(' ', ilvl * 2);
                 var marker = isOrdered ? _orderedCounters.Next(numId, ilvl) + "." : "-";
-                var itemText = InlineMarkdownBuilder.BuildParagraphText(paragraph, _context);
+                var itemText = MarkdownEscaper.EscapeLeadingMarkers(InlineMarkdownBuilder.BuildParagraphText(paragraph, _context));
                 _listLines.Add(indent + marker + " " + itemText);
                 return;
             }
@@ -184,7 +184,7 @@ internal static class DocumentMarkdownBuilder
                 return;
             }
 
-            _blocks.Add(MarkdownEscaper.EscapeLeadingMarker(plainText));
+            _blocks.Add(MarkdownEscaper.EscapeLeadingMarkers(plainText));
         }
 
         private void FlushAll()
@@ -224,8 +224,45 @@ internal static class DocumentMarkdownBuilder
                 return;
             }
 
-            _blocks.Add("```\n" + string.Join("\n", _codeLines) + "\n```");
+            // A fixed 3-backtick fence early-closes if a line inside the
+            // block itself contains 3+ consecutive backticks (e.g. pasted
+            // Markdown-about-Markdown). Use a fence one backtick longer than
+            // the longest backtick run anywhere in the content, minimum 3 --
+            // same CommonMark reasoning as InlineMarkdownBuilder.WrapCode for
+            // inline code spans.
+            var content = string.Join("\n", _codeLines);
+            var fenceLength = LongestBacktickRun(content) + 1;
+            if (fenceLength < 3)
+            {
+                fenceLength = 3;
+            }
+
+            var fence = new string('`', fenceLength);
+            _blocks.Add(fence + "\n" + content + "\n" + fence);
             _codeLines.Clear();
+        }
+
+        private static int LongestBacktickRun(string text)
+        {
+            var longest = 0;
+            var current = 0;
+            foreach (var ch in text)
+            {
+                if (ch == '`')
+                {
+                    current++;
+                    if (current > longest)
+                    {
+                        longest = current;
+                    }
+                }
+                else
+                {
+                    current = 0;
+                }
+            }
+
+            return longest;
         }
 
         private string BuildMathBlock(MathOfficeMath officeMath)
