@@ -83,24 +83,45 @@ internal static class InlineMarkdownBuilder
         public static Atom OpaqueAtom(string rendered) => new(AtomKind.Opaque, rendered, default, false);
     }
 
-    /// <summary>Builds the full Markdown inline text for one paragraph's content.</summary>
-    public static string BuildParagraphText(Paragraph paragraph, MdConversionContext context)
+    /// <summary>
+    /// Builds the full Markdown inline text for one paragraph's content.
+    /// <paramref name="escapePipesForTable"/> is set by
+    /// <c>TableMarkdownBuilder</c> for cell content: a literal <c>|</c>
+    /// character would otherwise split a pipe-table row, including one that
+    /// sits inside an inline code span (code-span content bypasses
+    /// <see cref="MarkdownEscaper.EscapeInlineText"/>, since backslash
+    /// escapes don't apply inside a real CommonMark code span -- but GFM's
+    /// table-row splitting doesn't know about code spans either, so it still
+    /// needs protecting there). Handled at this atom-rendering level, where
+    /// it's known for certain which text is raw code content, rather than by
+    /// re-scanning the already-rendered string afterwards.
+    /// </summary>
+    public static string BuildParagraphText(Paragraph paragraph, MdConversionContext context, bool escapePipesForTable = false)
     {
         var atoms = new List<Atom>();
         CollectAtoms(paragraph.ChildElements, context, atoms);
-        return Render(atoms);
+        return Render(atoms, escapePipesForTable);
     }
 
     /// <summary>
     /// Concatenated raw (unescaped, unformatted) text of a paragraph's runs,
     /// hard breaks rendered as <c>\n</c> — for fenced code block lines, where
-    /// no Markdown escaping or emphasis should ever apply.
+    /// no Markdown escaping or emphasis should ever apply. Hidden runs
+    /// (w:vanish) are skipped with a warning, same as
+    /// <see cref="CollectAtoms"/> -- a Consolas-font code block can carry
+    /// hidden runs just like any other paragraph.
     /// </summary>
-    public static string GetRawText(Paragraph paragraph)
+    public static string GetRawText(Paragraph paragraph, MdConversionContext context)
     {
         var builder = new StringBuilder();
         foreach (var run in paragraph.Elements<Run>())
         {
+            if (IsHidden(run.RunProperties))
+            {
+                context.Warnings.Add("Hidden text skipped (not supported).");
+                continue;
+            }
+
             foreach (var child in run.ChildElements)
             {
                 switch (child)
@@ -165,6 +186,20 @@ internal static class InlineMarkdownBuilder
             switch (child)
             {
                 case Run run:
+                    if (IsHidden(run.RunProperties))
+                    {
+                        // Word's "hidden text" character formatting
+                        // (w:vanish) -- not part of what a normal
+                        // (non-"show hidden text") view/print shows, so it
+                        // must not leak into the Markdown. Note: a style
+                        // (rather than run-level) Vanish is NOT resolved
+                        // here -- StyleCatalog only reads style names today,
+                        // so style-level hidden text is a known gap, not
+                        // fixed by this check.
+                        context.Warnings.Add("Hidden text skipped (not supported).");
+                        break;
+                    }
+
                     CollectRunAtoms(run, context, atoms);
                     break;
                 case Hyperlink hyperlink:
@@ -177,6 +212,12 @@ internal static class InlineMarkdownBuilder
                     // Tracked-change insertion: its content is current
                     // document content, just wrapped — read through it.
                     CollectAtoms(insertedRun.ChildElements, context, atoms);
+                    break;
+                case MoveToRun moveToRun:
+                    // Tracked-change move destination: the moved text now
+                    // lives here as current document content -- read
+                    // through it exactly like InsertedRun above.
+                    CollectAtoms(moveToRun.ChildElements, context, atoms);
                     break;
                 case DeletedRun:
                     // Tracked-change deletion: not part of the current
@@ -195,7 +236,11 @@ internal static class InlineMarkdownBuilder
                     break;
 
                 // Bookmarks, proofErr, smart tags, rsid-only noise, etc. —
-                // nothing this walker needs to read; silently skipped.
+                // nothing this walker needs to read; silently skipped. This
+                // includes MoveFromRun (tracked-change move source): the
+                // moved text lives at its MoveToRun destination instead, so
+                // the source location contributes nothing here, same as
+                // DeletedRun above.
             }
         }
     }
@@ -242,7 +287,7 @@ internal static class InlineMarkdownBuilder
         }
     }
 
-    private static string Render(List<Atom> atoms)
+    private static string Render(List<Atom> atoms, bool escapePipesForTable = false, bool escapeAllBrackets = false)
     {
         var builder = new StringBuilder();
         var i = 0;
@@ -276,25 +321,73 @@ internal static class InlineMarkdownBuilder
                 i++;
             }
 
-            builder.Append(RenderTextGroup(textBuilder.ToString(), format, isCode));
+            builder.Append(RenderTextGroup(textBuilder.ToString(), format, isCode, escapePipesForTable, escapeAllBrackets));
         }
 
         return builder.ToString();
     }
 
-    private static string RenderTextGroup(string text, Format format, bool isCode)
+    private static string RenderTextGroup(string text, Format format, bool isCode, bool escapePipesForTable, bool escapeAllBrackets = false)
     {
         if (isCode)
         {
-            return WrapCode(text);
+            // Raw code-span content bypasses EscapeInlineText entirely (see
+            // BuildParagraphText's doc comment) -- so a literal '|' here is
+            // still completely unescaped. Only escape it when this text is
+            // headed for a table cell; a plain paragraph's inline code must
+            // keep a raw pipe raw (CommonMark: backslash escapes are inert
+            // inside a real code span, so escaping it there would just leave
+            // a stray visible backslash).
+            var codeText = escapePipesForTable ? text.Replace("|", "\\|") : text;
+            return WrapCode(codeText);
         }
 
-        var escaped = MarkdownEscaper.EscapeInlineText(text);
+        var escaped = MarkdownEscaper.EscapeInlineText(text, escapeAllBrackets);
         return ApplyFormat(escaped, format);
     }
 
-    private static string WrapCode(string text) =>
-        text.Contains('`') ? "`` " + text + " ``" : "`" + text + "`";
+    /// <summary>
+    /// Wraps inline code per the CommonMark code-span algorithm: the fence
+    /// must be one backtick longer than the longest run of consecutive
+    /// backticks inside the content (minimum 1), otherwise a fence that
+    /// happens to match a backtick run inside the content would close the
+    /// span early. A single leading/trailing space is added when the
+    /// content itself starts or ends with a backtick, so the fence doesn't
+    /// visually fuse with the content's own backtick.
+    /// </summary>
+    private static string WrapCode(string text)
+    {
+        var fenceLength = LongestBacktickRun(text) + 1;
+        var fence = new string('`', fenceLength);
+
+        var needsPadding = text.Length > 0 && (text[0] == '`' || text[text.Length - 1] == '`');
+        var padded = needsPadding ? " " + text + " " : text;
+
+        return fence + padded + fence;
+    }
+
+    private static int LongestBacktickRun(string text)
+    {
+        var longest = 0;
+        var current = 0;
+        foreach (var ch in text)
+        {
+            if (ch == '`')
+            {
+                current++;
+                if (current > longest)
+                {
+                    longest = current;
+                }
+            }
+            else
+            {
+                current = 0;
+            }
+        }
+
+        return longest;
+    }
 
     private static string ApplyFormat(string text, Format format)
     {
@@ -366,7 +459,11 @@ internal static class InlineMarkdownBuilder
     {
         var innerAtoms = new List<Atom>();
         CollectAtoms(hyperlink.ChildElements, context, innerAtoms);
-        var label = Render(innerAtoms);
+        // escapeAllBrackets: true -- a stray "[" / "]" in the link's own
+        // visible text must never be left to prematurely close/reopen the
+        // surrounding "[label](url)" construct. See EscapeInlineText's
+        // parameter doc for why this differs from plain paragraph text.
+        var label = Render(innerAtoms, escapePipesForTable: false, escapeAllBrackets: true);
 
         var relationshipId = hyperlink.Id?.Value;
         if (relationshipId != null && context.MainPart != null)
@@ -376,7 +473,10 @@ internal static class InlineMarkdownBuilder
 
             if (relationship != null)
             {
-                return $"[{label}]({relationship.Uri})";
+                // Angle-bracket the URL (CommonMark "pointy bracket" link
+                // destination) so a space or unbalanced paren in the URL
+                // can't break the link syntax.
+                return $"[{label}](<{relationship.Uri}>)";
             }
         }
 
@@ -414,6 +514,21 @@ internal static class InlineMarkdownBuilder
         var font = runProperties.RunFonts?.Ascii?.Value ?? runProperties.RunFonts?.HighAnsi?.Value;
         return font != null && MonospaceFonts.Contains(font);
     }
+
+    /// <summary>
+    /// True when the run carries Word's "Hidden" character formatting
+    /// (w:vanish). Like Bold/Italic/Strike above, this is an OOXML toggle
+    /// property: the element's mere presence does not mean "true" -- an
+    /// explicit <c>&lt;w:vanish w:val="false"/&gt;</c> means NOT hidden, so
+    /// this must be checked the same way ReadFormat checks Bold, not just
+    /// "is the element present". Only run-level w:vanish is handled;
+    /// w:specVanish (internal Word bookkeeping, e.g. paragraph-mark-only
+    /// hidden runs) and w:webHidden (hidden only in Web Layout view, still
+    /// visible/printable otherwise) are deliberately not treated as hidden
+    /// here, since neither means "hidden in the view being copied from".
+    /// </summary>
+    private static bool IsHidden(RunProperties runProperties) =>
+        runProperties?.Vanish != null && runProperties.Vanish.Val?.Value != false;
 
     private static Format ReadFormat(RunProperties runProperties)
     {
