@@ -50,7 +50,17 @@ public class LiveBugRegressionTests
         Assert.Contains("y", cell.InnerText);
     }
 
-    // --- LIVE-2: [1] must not be escaped into \[1\] on copy (reads as math) -
+    // --- LIVE-2: [1] must NOT be escaped on copy, to avoid it reading as
+    // \[...\] LaTeX display math (LatexDelimiterPreprocessor's
+    // BracketDelimiter) on a later paste. A security/quality audit
+    // (Phase 4 OoxmlToMd bug group 3a) initially escaped "[" and "]"
+    // unconditionally to stop plain text like "[click](javascript:...)"
+    // round-tripping into a real Markdown link -- but that collided with
+    // this exact bug, so the final fix is narrower: EscapeInlineText only
+    // escapes "]" when immediately followed by "(" or "[" (enough to
+    // neutralize an accidental link/image), and a hyperlink's own label
+    // text gets full bracket escaping separately (escapeAllBrackets). See
+    // MarkdownEscaper.EscapeInlineText's doc comment.
 
     [Fact]
     public void Live2_Copy_SquareBracketCitation_IsNotEscapedIntoMathDelimiters()
