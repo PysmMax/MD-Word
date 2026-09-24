@@ -243,17 +243,28 @@ internal static class InlineRunBuilder
             // degrade this one link, not abort the whole document (the initial plan §6).
             if (System.Uri.TryCreate(link.Url ?? string.Empty, System.UriKind.RelativeOrAbsolute, out var uri))
             {
-                if (uri.IsAbsoluteUri && !IsAllowedScheme(uri.Scheme))
-                {
-                    // SEC-02: only http(s)/mailto destinations get a live hyperlink --
-                    // anything else (file://, javascript:, custom schemes, ...) degrades
-                    // to plain text plus a warning rather than a silently created link.
-                    mathContext?.Warnings.Add($"A link with scheme '{uri.Scheme}' skipped — inserted the text only ('{link.Url}').");
-                }
-                else
+                if (uri.IsAbsoluteUri && IsAllowedScheme(uri.Scheme))
                 {
                     var relationship = mainPart.AddHyperlinkRelationship(uri, true);
                     hyperlink.Id = relationship.Id;
+                }
+                else
+                {
+                    // SEC-02: only http(s)/mailto destinations get a live hyperlink --
+                    // an allow-list, not a deny-list. Everything else degrades to plain
+                    // text plus a warning: an absolute URI with a disallowed scheme
+                    // (file://, javascript:, custom schemes, ...), and anything
+                    // Uri.TryCreate parsed as NOT absolute -- relative paths
+                    // ("x.exe", "../../x.exe"), fragment-only references ("#section",
+                    // treated as plain text rather than an internal w:anchor link --
+                    // this codebase has no bookmark/anchor infrastructure to target),
+                    // and "//host/share", which Uri.TryCreate parses as a *relative*
+                    // URI (IsAbsoluteUri == false) even though Word may resolve it as
+                    // a UNC network path when clicked. Requiring IsAbsoluteUri is what
+                    // closes that hole -- checking only the scheme (the previous logic)
+                    // let all of these through unfiltered.
+                    var description = uri.IsAbsoluteUri ? $"scheme '{uri.Scheme}'" : "a relative or unresolved target";
+                    mathContext?.Warnings.Add($"A link with {description} skipped — inserted the text only ('{link.Url}').");
                 }
             }
             else
@@ -278,14 +289,18 @@ internal static class InlineRunBuilder
             var url = autolink.IsEmail ? "mailto:" + autolink.Url : autolink.Url;
             if (System.Uri.TryCreate(url ?? string.Empty, System.UriKind.RelativeOrAbsolute, out var uri))
             {
-                if (uri.IsAbsoluteUri && !IsAllowedScheme(uri.Scheme))
-                {
-                    mathContext?.Warnings.Add($"A link with scheme '{uri.Scheme}' skipped — inserted the text only ('{autolink.Url}').");
-                }
-                else
+                if (uri.IsAbsoluteUri && IsAllowedScheme(uri.Scheme))
                 {
                     var relationship = mainPart.AddHyperlinkRelationship(uri, true);
                     hyperlink.Id = relationship.Id;
+                }
+                else
+                {
+                    // SEC-02: same allow-list rationale as BuildHyperlink above -- see
+                    // the comment there. IsAbsoluteUri must hold in addition to the
+                    // scheme being allowed, not merely "not a disallowed absolute scheme".
+                    var description = uri.IsAbsoluteUri ? $"scheme '{uri.Scheme}'" : "a relative or unresolved target";
+                    mathContext?.Warnings.Add($"A link with {description} skipped — inserted the text only ('{autolink.Url}').");
                 }
             }
         }
