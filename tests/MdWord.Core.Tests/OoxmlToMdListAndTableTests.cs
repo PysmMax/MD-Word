@@ -123,6 +123,29 @@ public class OoxmlToMdListAndTableTests
         Assert.Contains("1. foreign ordered item", reverse.Markdown);
     }
 
+    [Fact]
+    public void ListItemText_LeadingPlus_IsEscaped()
+    {
+        // Bug 3b/3c: "+ " is also a valid Markdown bullet marker -- a list
+        // item whose own text starts with "+ " must have it escaped, or the
+        // rendered "- + text" line reads as a nested bullet list.
+        var numbering = new Numbering(
+            new AbstractNum(
+                new Level(new NumberingFormat { Val = NumberFormatValues.Bullet }, new LevelText { Val = "*" }) { LevelIndex = 0 })
+            { AbstractNumberId = 1 },
+            new NumberingInstance(new AbstractNumId { Val = 1 }) { NumberID = 1 });
+
+        var body = new Body(
+            new Paragraph(
+                new ParagraphProperties(new NumberingProperties(new NumberingLevelReference { Val = 0 }, new NumberingId { Val = 1 })),
+                new Run(new Text("+ not nested"))));
+
+        var flatOpc = BuildFlatOpc(body, numbering);
+        var reverse = new MarkdownConverter(null).ToMarkdown(flatOpc);
+
+        Assert.Contains("- \\+ not nested", reverse.Markdown);
+    }
+
     // ---- Tables ----
 
     [Fact]
@@ -186,5 +209,58 @@ public class OoxmlToMdListAndTableTests
         Assert.Contains("merged", reverse.Markdown);
         Assert.NotEmpty(reverse.Warnings);
         Assert.Contains(reverse.Warnings, w => w.Contains("vMerge"));
+    }
+
+    [Fact]
+    public void TableCell_WithPipeCharacter_EscapesPipe_KeepsColumnCountValid()
+    {
+        // Plain (non-code) cell text already had its "|" escaped by
+        // MarkdownEscaper.EscapeInlineText before this bug-fix pass (it was
+        // already in the always-escape switch) -- this is a regression
+        // guard for that pre-existing behavior. The actual bug 3e gap was
+        // specifically inline code content inside a cell, since code spans
+        // bypass EscapeInlineText -- see TableCell_WithPipeInsideInlineCode_EscapesPipe below.
+        var body = new Body(
+            new Table(
+                new TableGrid(new GridColumn(), new GridColumn()),
+                new TableRow(
+                    new TableCell(new Paragraph(new Run(new Text("a | b")))),
+                    new TableCell(new Paragraph(new Run(new Text("normal")))))));
+
+        var flatOpc = BuildFlatOpc(body);
+        var reverse = new MarkdownConverter(null).ToMarkdown(flatOpc);
+
+        Assert.Contains("a \\| b", reverse.Markdown);
+
+        var dataLine = System.Array.Find(reverse.Markdown.Split('\n'), l => l.Contains("a \\| b"));
+        Assert.NotNull(dataLine);
+
+        // The cell's escaped pipe must not be read as a column delimiter --
+        // splitting on only the UNESCAPED "|" characters must still yield
+        // exactly 2 data columns, same shape as the gridSpan test above.
+        var unescapedSplit = System.Text.RegularExpressions.Regex.Split(dataLine, @"(?<!\\)\|");
+        Assert.Equal(2, unescapedSplit.Length - 2);
+    }
+
+    [Fact]
+    public void TableCell_WithPipeInsideInlineCode_EscapesPipe()
+    {
+        // Code-span content bypasses ordinary EscapeInlineText (CommonMark:
+        // backslash escapes are inert inside a real code span) -- but GFM
+        // table-row splitting doesn't know about code spans, so a pipe
+        // inside an inline code span in a cell must still be escaped for
+        // the table specifically.
+        var body = new Body(
+            new Table(
+                new TableGrid(new GridColumn()),
+                new TableRow(
+                    new TableCell(
+                        new Paragraph(
+                            new Run(new RunProperties(new RunStyle { Val = "CodeInline" }), new Text("a|b")))))));
+
+        var flatOpc = BuildFlatOpc(body);
+        var reverse = new MarkdownConverter(null).ToMarkdown(flatOpc);
+
+        Assert.Contains("`a\\|b`", reverse.Markdown);
     }
 }
