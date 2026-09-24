@@ -43,6 +43,7 @@ AppName={#AppNameStr}
 AppVersion={#AppVersion}
 AppPublisher={#AppNameStr}
 DefaultDirName={userpf}\MD-Word
+DisableDirPage=yes
 DisableProgramGroupPage=yes
 PrivilegesRequired=lowest
 Compression=lzma2
