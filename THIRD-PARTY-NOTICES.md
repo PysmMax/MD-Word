@@ -76,9 +76,3 @@ Copyright (C) 2001-2003 Vasil Yaroshevich. Permissive MIT-style license;
 the original distribution's notice is preserved verbatim in
 `src/MdWord.Core/Resources/mmltex/README-xsltml.txt`, which is embedded and
 shipped unchanged alongside the stylesheets.
-
-## Microsoft.Office.Interop.Word (NuGet 15.0.4797.1004)
-
-Interop **type definitions are embedded** into `MdWord.AddIn.dll` at compile
-time (`EmbedInteropTypes`); the primary interop assembly itself is not
-redistributed.
