@@ -120,11 +120,23 @@ internal static class TableMarkdownBuilder
 
     private static string BuildCellContent(TableCell cell, MdConversionContext context)
     {
+        // Hidden runs (w:vanish) inside a cell's paragraphs are already
+        // dropped by InlineMarkdownBuilder.BuildParagraphText -- it walks
+        // the same CollectAtoms/CollectRunAtoms path used for ordinary
+        // paragraph text, so a run-level fix there covers table cells too
+        // without a separate check here.
+        //
+        // escapePipesForTable: true escapes a literal '|' left unescaped
+        // inside an inline code span (see BuildParagraphText's doc comment)
+        // -- a raw pipe there would otherwise split this pipe-table row,
+        // even though CommonMark itself doesn't require it inside a code
+        // span. Ordinary (non-code) text already has its '|' escaped
+        // unconditionally by MarkdownEscaper.EscapeInlineText.
         var paragraphTexts = cell.Elements<Paragraph>()
             // A hard break renders as "\<newline>" (InlineMarkdownBuilder.Render),
             // which would split this cell's pipe-table row across lines -- inside
             // a cell it must use the same <br> convention as paragraph joins.
-            .Select(paragraph => InlineMarkdownBuilder.BuildParagraphText(paragraph, context).Replace("\\\n", "<br>"))
+            .Select(paragraph => InlineMarkdownBuilder.BuildParagraphText(paragraph, context, escapePipesForTable: true).Replace("\\\n", "<br>"))
             .Where(text => !string.IsNullOrEmpty(text));
 
         return string.Join("<br>", paragraphTexts);
