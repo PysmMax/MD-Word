@@ -19,9 +19,19 @@ namespace MdWord.Core.Math;
 /// </summary>
 internal static class KaTeXRenderer
 {
+    // trust/maxSize/maxExpand are KaTeX's own secure defaults (trust: false;
+    // maxExpand: 1000 per KaTeX's documentation). They already applied
+    // implicitly before this change (simply by not being overridden) — set
+    // here explicitly so the safe behavior survives a future KaTeX upgrade
+    // that might change its defaults, and is visible to readers/auditors
+    // instead of being an accident of omission. maxSize is pinned to a
+    // concrete 500 (em) rather than KaTeX's actual default of Infinity: as
+    // defense in depth, since Infinity is only safe in combination with
+    // trust: false, and a finite cap still comfortably covers any
+    // legitimate formula.
     private const string Tex2MmlDeclaration = @"
 function tex2mml(tex, display) {
-  return katex.renderToString(tex, { output: 'mathml', displayMode: display, throwOnError: true });
+  return katex.renderToString(tex, { output: 'mathml', displayMode: display, throwOnError: true, trust: false, maxSize: 500, maxExpand: 1000 });
 }";
 
     private static readonly object EngineLock = new();
